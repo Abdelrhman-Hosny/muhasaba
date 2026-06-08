@@ -56,4 +56,6 @@ export async function signInWithGoogle(): Promise<void> {
 export async function signOut(): Promise<void> {
   await supabase.auth.signOut();
   user$.set(null);
+  const { clearStores } = await import('./stores');
+  clearStores();
 }

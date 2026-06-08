@@ -18,7 +18,7 @@ export function HabitRow({ habit, value, onChange }: {
       <Text style={{ color: theme.colors.text, fontFamily: theme.font, fontSize: 18 }}>{habit.name}</Text>
       <View style={{ flexDirection: 'row-reverse', alignItems: 'center' }}>
         {habit.type === 'count' ? (
-          <Text style={{ color: theme.colors.muted, fontFamily: theme.font, marginLeft: 8 }}>{value}/{habit.target}</Text>
+          <Text style={{ color: theme.colors.muted, fontFamily: theme.font, marginEnd: 8 }}>{value}/{habit.target}</Text>
         ) : null}
         <Ionicons name={done ? 'checkmark-circle' : 'ellipse-outline'} size={24}
           color={done ? theme.colors.primary : theme.colors.muted} />

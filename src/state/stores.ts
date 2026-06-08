@@ -55,3 +55,9 @@ export const prayerLogs$ = observable(
     persist: { name: 'prayer_logs' },
   }),
 );
+
+export function clearStores() {
+  habits$.set({} as any);
+  habitLogs$.set({} as any);
+  prayerLogs$.set({} as any);
+}

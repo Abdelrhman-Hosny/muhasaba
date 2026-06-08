@@ -19,7 +19,7 @@ export function PrayerRow({ prayer, status, onChange }: {
         backgroundColor: theme.colors.surface, padding: 16, borderRadius: 12, marginBottom: 8 }}>
       <Text style={{ color: theme.colors.text, fontFamily: theme.font, fontSize: 18 }}>{ar.prayers[prayer]}</Text>
       <View style={{ flexDirection: 'row-reverse', alignItems: 'center' }}>
-        <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: STATUS_COLOR[status], marginLeft: 8 }} />
+        <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: STATUS_COLOR[status], marginEnd: 8 }} />
         <Text style={{ color: theme.colors.muted, fontFamily: theme.font }}>{ar.prayerStatus[status]}</Text>
       </View>
     </Pressable>
