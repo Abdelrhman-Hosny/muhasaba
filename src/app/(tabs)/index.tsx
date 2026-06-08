@@ -1,6 +1,6 @@
 import { ScrollView, Text, View, Pressable } from 'react-native';
 import { Link } from 'expo-router';
-import { use$ } from '@legendapp/state/react';
+import { useObs } from '@/state/useObs';
 import { PRAYERS, Prayer, PrayerStatus } from '@/domain/prayers';
 import { Habit } from '@/domain/habits';
 import { todayKey } from '@/domain/dates';
@@ -13,10 +13,10 @@ import { ar } from '@/i18n/ar';
 
 export default function Today() {
   const date = todayKey();
-  const uid = use$(user$)?.id ?? '';
-  const habits = Object.values(use$(habits$) ?? {}) as Habit[];
-  const habitLogs = use$(habitLogs$) ?? {};
-  const prayerLogs = use$(prayerLogs$) ?? {};
+  const uid = useObs(user$)?.id ?? '';
+  const habits = Object.values(useObs(habits$) ?? {}) as Habit[];
+  const habitLogs = useObs(habitLogs$) ?? {};
+  const prayerLogs = useObs(prayerLogs$) ?? {};
 
   function setPrayer(prayer: Prayer, status: PrayerStatus) {
     const id = prayerLogId(uid, date, prayer);

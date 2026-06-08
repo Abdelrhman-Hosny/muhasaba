@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { I18nManager, View, ActivityIndicator } from 'react-native';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { useFonts, Cairo_400Regular } from '@expo-google-fonts/cairo';
-import { use$ } from '@legendapp/state/react';
+import { useObs } from '@/state/useObs';
 import { user$, initAuth } from '@/state/auth';
 import { theme } from '@/ui/theme';
 
@@ -37,7 +37,7 @@ export default function RootLayout() {
 }
 
 function AuthGuardedStack() {
-  const user = use$(user$);
+  const user = useObs(user$);
   const segments = useSegments();
   const router = useRouter();
 

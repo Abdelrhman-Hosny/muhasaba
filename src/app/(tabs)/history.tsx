@@ -1,5 +1,5 @@
 import { ScrollView, Text, View } from 'react-native';
-import { use$ } from '@legendapp/state/react';
+import { useObs } from '@/state/useObs';
 import { Habit } from '@/domain/habits';
 import { Prayer, PrayerStatus, PRAYERS } from '@/domain/prayers';
 import { summarizeDay } from '@/domain/history';
@@ -8,9 +8,9 @@ import { theme } from '@/ui/theme';
 import { ar } from '@/i18n/ar';
 
 export default function History() {
-  const habits = Object.values(use$(habits$) ?? {}) as Habit[];
-  const habitLogs = Object.values(use$(habitLogs$) ?? {}) as any[];
-  const prayerLogs = Object.values(use$(prayerLogs$) ?? {}) as any[];
+  const habits = Object.values(useObs(habits$) ?? {}) as Habit[];
+  const habitLogs = Object.values(useObs(habitLogs$) ?? {}) as any[];
+  const prayerLogs = Object.values(useObs(prayerLogs$) ?? {}) as any[];
 
   const dates = Array.from(new Set([
     ...habitLogs.map((l) => l.date),

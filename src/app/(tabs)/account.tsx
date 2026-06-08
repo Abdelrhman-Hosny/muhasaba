@@ -1,11 +1,11 @@
 import { View, Text, Pressable } from 'react-native';
-import { use$ } from '@legendapp/state/react';
+import { useObs } from '@/state/useObs';
 import { user$, signOut } from '@/state/auth';
 import { theme } from '@/ui/theme';
 import { ar } from '@/i18n/ar';
 
 export default function Account() {
-  const user = use$(user$);
+  const user = useObs(user$);
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.bg, padding: 24 }}>
       <Text style={{ color: theme.colors.text, fontFamily: theme.font, fontSize: 24, marginBottom: 24, textAlign: 'right' }}>{ar.tabs.account}</Text>

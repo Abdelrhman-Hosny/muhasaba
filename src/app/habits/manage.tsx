@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { View, Text, TextInput, Pressable, ScrollView, Switch } from 'react-native';
-import { use$ } from '@legendapp/state/react';
+import { useObs } from '@/state/useObs';
 import * as Crypto from 'expo-crypto';
 import { Habit } from '@/domain/habits';
 import { user$ } from '@/state/auth';
@@ -9,8 +9,8 @@ import { theme } from '@/ui/theme';
 import { ar } from '@/i18n/ar';
 
 export default function ManageHabits() {
-  const uid = use$(user$)?.id ?? '';
-  const habits = Object.values(use$(habits$) ?? {}) as Habit[];
+  const uid = useObs(user$)?.id ?? '';
+  const habits = Object.values(useObs(habits$) ?? {}) as Habit[];
   const [name, setName] = useState('');
   const [isCount, setIsCount] = useState(false);
   const [target, setTarget] = useState('1');
