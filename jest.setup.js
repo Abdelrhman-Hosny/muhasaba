@@ -1,12 +1,16 @@
-// MMKV requires a native module; mock it for unit tests.
+// react-native-mmkv requires a native module; mock it for unit tests.
+// v4 API: storage is created via createMMKV({ id }); the instance uses
+// set / getString / remove / clearAll.
 jest.mock('react-native-mmkv', () => {
-  const store = new Map();
-  return {
-    MMKV: class {
-      set(k, v) { store.set(k, v); }
-      getString(k) { return store.get(k); }
-      delete(k) { store.delete(k); }
-      clearAll() { store.clear(); }
-    },
-  };
+  function createMMKV() {
+    const store = new Map();
+    return {
+      set: (k, v) => store.set(k, v),
+      getString: (k) => store.get(k),
+      remove: (k) => store.delete(k),
+      delete: (k) => store.delete(k),
+      clearAll: () => store.clear(),
+    };
+  }
+  return { createMMKV };
 });
