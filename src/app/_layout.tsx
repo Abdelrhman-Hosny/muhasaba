@@ -22,20 +22,6 @@ export default function RootLayout() {
     initAuth().finally(() => setReady(true));
   }, []);
 
-  const user = use$(user$);
-  const segments = useSegments();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!ready || !fontsLoaded) return;
-    const inAuthGroup = segments[0] === 'sign-in';
-    if (!user && !inAuthGroup) {
-      router.replace('/sign-in');
-    } else if (user && inAuthGroup) {
-      router.replace('/(tabs)');
-    }
-  }, [user, segments, ready, fontsLoaded]);
-
   if (!ready || !fontsLoaded) {
     return (
       <View style={{ flex: 1, backgroundColor: theme.colors.bg, justifyContent: 'center' }}>
@@ -43,6 +29,26 @@ export default function RootLayout() {
       </View>
     );
   }
+
+  // Auth/navigation hooks live in a child that only mounts once loading is
+  // done, so RootLayout's hook order stays stable across the loading→ready
+  // transition (avoids a rules-of-hooks violation).
+  return <AuthGuardedStack />;
+}
+
+function AuthGuardedStack() {
+  const user = use$(user$);
+  const segments = useSegments();
+  const router = useRouter();
+
+  useEffect(() => {
+    const inAuthGroup = segments[0] === 'sign-in';
+    if (!user && !inAuthGroup) {
+      router.replace('/sign-in');
+    } else if (user && inAuthGroup) {
+      router.replace('/(tabs)');
+    }
+  }, [user, segments, router]);
 
   return <Stack screenOptions={{ headerShown: false }} />;
 }
