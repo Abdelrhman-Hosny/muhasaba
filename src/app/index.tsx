@@ -1,9 +1,8 @@
-import { Text, View } from 'react-native';
+import { Redirect } from 'expo-router';
+import { use$ } from '@legendapp/state/react';
+import { user$ } from '@/state/auth';
 
 export default function Index() {
-  return (
-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-      <Text>محاسبة</Text>
-    </View>
-  );
+  const user = use$(user$);
+  return <Redirect href={user ? '/(tabs)' : '/sign-in'} />;
 }
