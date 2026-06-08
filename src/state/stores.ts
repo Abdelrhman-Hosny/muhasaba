@@ -11,14 +11,19 @@ export const prayerLogId = (userId: string, date: string, prayer: string) =>
 export const habitLogId = (userId: string, date: string, habitId: string) =>
   `${userId}:${date}:${habitId}`;
 
+// During Expo Router's web server-side render this module is evaluated in Node,
+// where MMKV's native storage isn't available. The plugin creates MMKV eagerly in
+// its constructor, so only instantiate it on the client and skip persistence on the server.
+const isServer = typeof window === 'undefined';
+
 // Create a single shared MMKV plugin instance (v4-compatible: uses createMMKV internally).
-const mmkvPlugin = observablePersistMMKV({ id: 'obsPersist' });
+const mmkvPlugin = isServer ? null : observablePersistMMKV({ id: 'obsPersist' });
 
 // Pre-configure syncedSupabase with project-wide defaults.
 // `configureSynced` returns the same function with these options baked in.
 const customSynced = configureSynced(syncedSupabase, {
   supabase: supabase as any,
-  persist: { plugin: mmkvPlugin },
+  ...(mmkvPlugin ? { persist: { plugin: mmkvPlugin } } : {}),
   changesSince: 'last-sync',
   fieldCreatedAt: 'created_at',
   fieldUpdatedAt: 'updated_at',
