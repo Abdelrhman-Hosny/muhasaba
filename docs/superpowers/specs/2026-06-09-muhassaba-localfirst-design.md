@@ -109,6 +109,25 @@ Screens **never** touch the database directly. All reads/writes go through a thi
 This keeps the UI decoupled from the storage engine and isolates all SQL in one
 place.
 
+### Querying vs. syncing (Drizzle vs. supabase-js)
+
+These two never overlap, which keeps each simple:
+
+- **Drizzle owns all querying**, exclusively against **local SQLite**. Every read
+  and every join (now just `prayer_logs`; later habits⨝logs, stats, etc.) runs
+  here, type-safe. The read path is 100% local — the UI never queries the server.
+- **supabase-js owns only sync transport** against Postgres, and those calls are
+  **join-free row shipping**: push = `upsert(dirtyRows)`, pull =
+  `select … where user_id = ? and updated_at > cursor`. Because no join ever runs
+  server-side, supabase-js's awkward join ergonomics never surface.
+
+We deliberately do **not** point Drizzle's Postgres driver at Supabase from the
+client: it would require embedding DB credentials in the app bundle, it bypasses
+RLS (which depends on the JWT flowing through PostgREST), and raw Postgres over
+mobile networks is fragile. Any future *server-side* join/aggregation belongs in a
+Supabase Edge Function or SQL view (where Drizzle may run server-side), never on
+the mobile client.
+
 ## 4. Data Model
 
 ### Local table: `prayer_logs`
