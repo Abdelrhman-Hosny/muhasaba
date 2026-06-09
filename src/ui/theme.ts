@@ -2,6 +2,7 @@ export const theme = {
   colors: {
     bg: '#0f1a14',
     surface: '#16241c',
+    surfaceDone: '#1c3a2a',
     primary: '#2e8b57',
     text: '#eaf2ec',
     muted: '#9bb3a4',

@@ -16,6 +16,11 @@ function fromLocalDateKey(key: string): Date {
   return new Date(y, m - 1, d);
 }
 
+/** Day-of-week index (0 = Sunday … 6 = Saturday) for a YYYY-MM-DD key. */
+export function weekdayIndex(key: string): number {
+  return fromLocalDateKey(key).getDay();
+}
+
 /** Whole-day difference (a - b) ignoring time. */
 function dayDiff(a: string, b: string): number {
   const ms = fromLocalDateKey(a).getTime() - fromLocalDateKey(b).getTime();

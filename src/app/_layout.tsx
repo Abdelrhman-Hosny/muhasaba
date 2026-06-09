@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { I18nManager, View, Text, ActivityIndicator } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
 import { useFonts, Cairo_400Regular } from '@expo-google-fonts/cairo';
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
@@ -33,5 +34,9 @@ export default function RootLayout() {
   if (error) return <Centered><Text style={{ color: theme.colors.text, fontFamily: theme.font }}>{String(error.message)}</Text></Centered>;
   if (!success || !fontsLoaded) return <Centered><ActivityIndicator color={theme.colors.primary} /></Centered>;
 
-  return <Stack screenOptions={{ headerShown: false }} />;
+  return (
+    <SafeAreaProvider>
+      <Stack screenOptions={{ headerShown: false }} />
+    </SafeAreaProvider>
+  );
 }

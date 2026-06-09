@@ -1,7 +1,8 @@
 export const ar = {
   appName: 'محاسبة',
   prayers: { fajr: 'الفجر', dhuhr: 'الظهر', asr: 'العصر', maghrib: 'المغرب', isha: 'العشاء' },
-  prayerStatus: { not_yet: 'لم تُصلَّ', on_time: 'في وقتها', late: 'متأخرة', missed: 'فائتة' },
+  prayerStatus: { not_yet: 'لم تُصلَّ', done: 'صُلِّيت' },
+  weekdays: ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'],
   account: {
     title: 'الحساب',
     signInGoogle: 'تسجيل الدخول عبر جوجل',
@@ -10,4 +11,5 @@ export const ar = {
   },
   sync: { synced: 'متزامن', syncing: 'جارٍ المزامنة…', offline: 'دون اتصال', localOnly: 'محلي فقط' },
   days: { today: 'اليوم', yesterday: 'أمس' },
+  summary: { completed: 'صلوات مكتملة' },
 };

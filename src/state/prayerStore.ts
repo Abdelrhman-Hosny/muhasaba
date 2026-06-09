@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
 import { db } from '@/db/client';
 import { prayerLogs } from '@/db/schema';
-import { PRAYERS, Prayer, PrayerStatus } from '@/domain/prayers';
+import { PRAYERS, Prayer, PrayerStatus, normalizeStatus } from '@/domain/prayers';
 import { user$ } from '@/state/auth';
 
 export const localRowId = (date: string, prayer: Prayer) => `${date}:${prayer}`;
@@ -48,7 +48,7 @@ export function useDay(date: string): DayStatuses {
   return useMemo(() => {
     const day = EMPTY_DAY();
     for (const row of data ?? []) {
-      day[row.prayer as Prayer] = row.status as PrayerStatus;
+      day[row.prayer as Prayer] = normalizeStatus(row.status);
     }
     return day;
   }, [data]);
