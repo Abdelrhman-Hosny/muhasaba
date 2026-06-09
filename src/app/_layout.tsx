@@ -1,54 +1,37 @@
-import { useEffect, useState } from 'react';
-import { I18nManager, View, ActivityIndicator } from 'react-native';
-import { Stack, useRouter, useSegments } from 'expo-router';
+import { useEffect } from 'react';
+import { I18nManager, View, Text, ActivityIndicator } from 'react-native';
+import { Stack } from 'expo-router';
 import { useFonts, Cairo_400Regular } from '@expo-google-fonts/cairo';
-import { useObs } from '@/state/useObs';
-import { user$, initAuth } from '@/state/auth';
+import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
+import { db } from '@/db/client';
+import migrations from '../../drizzle/migrations';
+import { initAuth } from '@/state/auth';
 import { theme } from '@/ui/theme';
 
-// Force RTL once.
 if (!I18nManager.isRTL) {
   I18nManager.allowRTL(true);
   I18nManager.forceRTL(true);
 }
 
-export default function RootLayout() {
-  const [ready, setReady] = useState(false);
-  const [fontsLoaded] = useFonts({
-    Cairo: Cairo_400Regular,
-  });
-
-  useEffect(() => {
-    initAuth().finally(() => setReady(true));
-  }, []);
-
-  if (!ready || !fontsLoaded) {
-    return (
-      <View style={{ flex: 1, backgroundColor: theme.colors.bg, justifyContent: 'center' }}>
-        <ActivityIndicator color={theme.colors.primary} />
-      </View>
-    );
-  }
-
-  // Auth/navigation hooks live in a child that only mounts once loading is
-  // done, so RootLayout's hook order stays stable across the loading→ready
-  // transition (avoids a rules-of-hooks violation).
-  return <AuthGuardedStack />;
+function Centered({ children }: { children: React.ReactNode }) {
+  return (
+    <View style={{ flex: 1, backgroundColor: theme.colors.bg, justifyContent: 'center', alignItems: 'center' }}>
+      {children}
+    </View>
+  );
 }
 
-function AuthGuardedStack() {
-  const user = useObs(user$);
-  const segments = useSegments();
-  const router = useRouter();
+export default function RootLayout() {
+  const [fontsLoaded] = useFonts({ Cairo: Cairo_400Regular });
+  const { success, error } = useMigrations(db, migrations);
 
   useEffect(() => {
-    const inAuthGroup = segments[0] === 'sign-in';
-    if (!user && !inAuthGroup) {
-      router.replace('/sign-in');
-    } else if (user && inAuthGroup) {
-      router.replace('/(tabs)');
-    }
-  }, [user, segments, router]);
+    if (!success) return;
+    initAuth(); // optional: loads any cached session; never blocks
+  }, [success]);
+
+  if (error) return <Centered><Text style={{ color: theme.colors.text, fontFamily: theme.font }}>{String(error.message)}</Text></Centered>;
+  if (!success || !fontsLoaded) return <Centered><ActivityIndicator color={theme.colors.primary} /></Centered>;
 
   return <Stack screenOptions={{ headerShown: false }} />;
 }
