@@ -46,3 +46,4 @@ example
 # Editor / tooling
 .vscode/
 .claude/
+supabase/.temp/

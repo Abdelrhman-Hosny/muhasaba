@@ -1,7 +1,7 @@
-import { observable } from '@legendapp/state';
 import * as WebBrowser from 'expo-web-browser';
 import * as AuthSession from 'expo-auth-session';
 import { supabase } from './supabase';
+import { makeObservable } from './observable';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -11,7 +11,7 @@ export interface AppUser {
   name: string | null;
 }
 
-export const user$ = observable<AppUser | null>(null);
+export const user$ = makeObservable<AppUser | null>(null);
 
 function toAppUser(session: any): AppUser | null {
   const u = session?.user;
@@ -25,10 +25,23 @@ function toAppUser(session: any): AppUser | null {
 
 /** Load any persisted session and subscribe to changes. Call once at startup. */
 export async function initAuth(): Promise<void> {
+  // Trust the persisted session even if the access token has already expired or
+  // we're currently offline. The stored refresh token is long-lived, so the user
+  // stays signed in; gotrue refreshes the access token automatically once it can
+  // reach the network again.
   const { data } = await supabase.auth.getSession();
   user$.set(toAppUser(data.session));
-  supabase.auth.onAuthStateChange((_event, session) => {
-    user$.set(toAppUser(session));
+  supabase.auth.onAuthStateChange((event, session) => {
+    // Only an *explicit* sign-out should clear the user. A failed or offline
+    // token refresh must never log the user out — gotrue may briefly emit a null
+    // session in that case, but the refresh token is still valid and is retried.
+    if (event === 'SIGNED_OUT') {
+      user$.set(null);
+      return;
+    }
+    if (session) {
+      user$.set(toAppUser(session));
+    }
   });
 }
 
@@ -56,6 +69,5 @@ export async function signInWithGoogle(): Promise<void> {
 export async function signOut(): Promise<void> {
   await supabase.auth.signOut();
   user$.set(null);
-  const { clearStores } = await import('./stores');
-  clearStores();
+  // Local prayer data is intentionally kept; sign-out only stops syncing.
 }
