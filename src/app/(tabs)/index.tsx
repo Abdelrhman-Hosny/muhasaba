@@ -10,6 +10,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Drawer } from '@/ui/components/Drawer';
 
 function dayLabel(date: string, today: string): { top: string; sub: string } {
   const dd = date.slice(8); // DD
@@ -24,6 +25,7 @@ export default function DayScreen() {
   const today = todayKey();
   const dates = editableDates(today, EDITABLE_DAYS_BACK); // today → oldest
   const [selected, setSelected] = useState(today);
+  const [drawerVisible, setDrawerVisible] = useState(false);
   const day = useDay(selected);
   const doneCount = PRAYERS.filter((p) => isDone(day[p])).length;
   const dateCounts = useDatesDoneCount(dates);
@@ -35,7 +37,7 @@ export default function DayScreen() {
         <Text style={{ color: theme.colors.text, fontFamily: theme.font, fontSize: 20 }}>
           {ar.header.score}: {toArabicNumeral(doneCount)}/{toArabicNumeral(PRAYERS.length)}
         </Text>
-        <Pressable hitSlop={8}>
+        <Pressable hitSlop={8} onPress={() => setDrawerVisible(true)}>
           <Ionicons name="menu-outline" size={26} color={theme.colors.muted} />
         </Pressable>
       </View>
@@ -87,6 +89,8 @@ export default function DayScreen() {
             onChange={(s: PrayerStatus) => setStatus(selected, p, s)} />
         ))}
       </ScrollView>
+
+      <Drawer visible={drawerVisible} onClose={() => setDrawerVisible(false)} />
     </View>
   );
 }

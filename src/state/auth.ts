@@ -1,3 +1,4 @@
+import { useSyncExternalStore } from 'react';
 import * as WebBrowser from 'expo-web-browser';
 import * as AuthSession from 'expo-auth-session';
 import { supabase } from './supabase';
@@ -70,4 +71,9 @@ export async function signOut(): Promise<void> {
   await supabase.auth.signOut();
   user$.set(null);
   // Local prayer data is intentionally kept; sign-out only stops syncing.
+}
+
+/** Reactive hook: returns the current AppUser or null. Re-renders on auth changes. */
+export function useUser(): AppUser | null {
+  return useSyncExternalStore(user$.onChange, user$.get, user$.get);
 }

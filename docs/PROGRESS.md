@@ -40,6 +40,33 @@ Based on [UX spec](superpowers/specs/2026-06-11-ux-discussion-summary.md) and [A
 | Modified | `__tests__/ui/PrayerRow.test.tsx` |
 | Deleted | `src/app/index.tsx` |
 
+## ✅ Iteration 1.5 — Auth, Sync & Drawer (2026-06-12)
+
+### Account & Sync Engine
+- [x] Account screen with Google OAuth via `expo-auth-session`
+- [x] Local-first sync engine (push dirty rows, pull remote, merge by `updated_at`)
+- [x] Claim local rows on first sign-in
+- [x] Live sync status indicator (`محلي فقط`, `جارٍ المزامنة…`, `متزامن`, `دون اتصال`)
+- [x] Map UI `done` status to Supabase Postgres `on_time` enum
+
+### Side Drawer (formerly Iteration 4)
+- [x] Hamburger icon opens right-side drawer overlay
+- [x] Drawer layout with Safe Area insets
+- [x] Links to Stats, Settings (placeholders) and Account
+
+### Files touched
+| Action | File |
+|---|---|
+| Created | `src/app/account.tsx` |
+| Created | `src/ui/components/Drawer.tsx` |
+| Created | `src/state/sync.ts` |
+| Created | `src/state/syncStatus.ts` |
+| Modified | `src/app/_layout.tsx` |
+| Modified | `src/app/(tabs)/index.tsx` |
+| Modified | `src/state/auth.ts` |
+| Modified | `src/state/prayerStore.ts` |
+| Modified | `src/i18n/ar.ts` |
+
 ---
 
 ## 🔲 Remaining Work (by priority)
@@ -61,10 +88,6 @@ Based on [UX spec](superpowers/specs/2026-06-11-ux-discussion-summary.md) and [A
 - [ ] Measured tasks (e.g., pages read → fraction score)
 - [ ] Auto-scroll date strip to selected chip
 - [ ] Bold font variant (`Cairo_700Bold`)
-
-### Iteration 4 — Side Drawer
-- [ ] Hamburger icon opens drawer
-- [ ] Drawer items: الإحصائيات (Stats), الإعدادات (Settings/Template)
 
 ### Iteration 5 — Edit Scorecard
 - [ ] Dedicated "تعديل الجدول" screen from Settings
@@ -104,8 +127,6 @@ Based on [UX spec](superpowers/specs/2026-06-11-ux-discussion-summary.md) and [A
 ### Polish Backlog
 - [ ] Circular progress ring option
 - [ ] 7-day streak row
-- [ ] `/account` route scaffold
-- [ ] Supabase sync (anonymous auth, push/pull)
 
 ### Future Phase
 - [ ] Mentorship mode (Sheikh & Students)

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { I18nManager, View, Text, ActivityIndicator } from 'react-native';
+import { I18nManager, View, Text, ActivityIndicator, AppState, AppStateStatus } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
 import { useFonts, Cairo_400Regular } from '@expo-google-fonts/cairo';
@@ -7,6 +7,7 @@ import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
 import { db } from '@/db/client';
 import migrations from '../../drizzle/migrations';
 import { initAuth } from '@/state/auth';
+import { runSync } from '@/state/sync';
 import { theme } from '@/ui/theme';
 
 if (!I18nManager.isRTL) {
@@ -28,7 +29,15 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (!success) return;
-    initAuth(); // optional: loads any cached session; never blocks
+    initAuth().then(() => runSync());
+
+    const subscription = AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
+      if (nextAppState === 'active') {
+        runSync();
+      }
+    });
+
+    return () => subscription.remove();
   }, [success]);
 
   if (error) return <Centered><Text style={{ color: theme.colors.text, fontFamily: theme.font }}>{String(error.message)}</Text></Centered>;

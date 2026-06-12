@@ -5,6 +5,7 @@ import { db } from '@/db/client';
 import { prayerLogs } from '@/db/schema';
 import { PRAYERS, Prayer, PrayerStatus, normalizeStatus } from '@/domain/prayers';
 import { user$ } from '@/state/auth';
+import { scheduleSync } from '@/state/sync';
 
 export const localRowId = (date: string, prayer: Prayer) => `${date}:${prayer}`;
 
@@ -28,6 +29,9 @@ export async function setStatus(date: string, prayer: Prayer, status: PrayerStat
       target: [prayerLogs.date, prayerLogs.prayer],
       set: { status, updatedAt: now, deleted: false, dirty: true },
     });
+  
+  // Debounced push to Supabase if the user is online & signed in
+  scheduleSync();
 }
 
 export type DayStatuses = Record<Prayer, PrayerStatus>;
