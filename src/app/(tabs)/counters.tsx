@@ -247,7 +247,7 @@ export default function CountersScreen() {
               <TextInput
                 testID="input-custom-count"
                 placeholder={ar.counters.custom}
-                keyboardType="numeric"
+                keyboardType="number-pad"
                 value={customValue}
                 onChangeText={setCustomValue}
                 onSubmitEditing={handleCustomSubmit}
@@ -398,7 +398,7 @@ export default function CountersScreen() {
             <TextInput
               testID="input-new-target"
               placeholder={ar.counters.targetOptional}
-              keyboardType="numeric"
+              keyboardType="number-pad"
               value={newTarget}
               onChangeText={setNewTarget}
               style={{
