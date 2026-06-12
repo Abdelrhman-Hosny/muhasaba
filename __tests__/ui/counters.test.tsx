@@ -95,6 +95,19 @@ describe('CountersScreen', () => {
     expect(incrementDhikrCount).toHaveBeenCalledWith(expect.any(String), 'd1', 150);
   });
 
+  it('custom count saves correctly via inline checkmark button', () => {
+    const { getByTestId } = render(<CountersScreen />);
+
+    // Enter custom count
+    const input = getByTestId('input-custom-count');
+    fireEvent.changeText(input, '250');
+
+    // Click inline checkmark button
+    fireEvent.press(getByTestId('btn-custom-submit-inline'));
+
+    expect(incrementDhikrCount).toHaveBeenCalledWith(expect.any(String), 'd1', 250);
+  });
+
   it('subtract mode subtracts count correctly', () => {
     const { getByTestId } = render(<CountersScreen />);
 

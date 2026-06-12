@@ -261,6 +261,19 @@ export default function CountersScreen() {
                   height: '100%',
                 }}
               />
+              {customValue.length > 0 && (
+                <Pressable
+                  testID="btn-custom-submit-inline"
+                  onPress={handleCustomSubmit}
+                  hitSlop={8}
+                  style={{
+                    padding: 4,
+                    marginRight: 4,
+                  }}
+                >
+                  <Ionicons name="checkmark-circle" size={24} color={theme.colors.primary} />
+                </Pressable>
+              )}
             </View>
 
             {/* Mode Toggle Segmented */}
