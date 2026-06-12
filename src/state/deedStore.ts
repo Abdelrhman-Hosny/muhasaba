@@ -54,7 +54,7 @@ export async function setDeedLog(
       dirty: true,
     })
     .onConflictDoUpdate({
-      target: [deedLogs.userId, deedLogs.date, deedLogs.deedId],
+      target: deedLogs.id,
       set: { status, value: finalValue, note, updatedAt: now, deleted: false, dirty: true },
     });
 
@@ -81,7 +81,7 @@ export async function setDeedLog(
         dirty: true,
       })
       .onConflictDoUpdate({
-        target: [dhikrLogs.userId, dhikrLogs.date, dhikrLogs.dhikrId],
+        target: dhikrLogs.id,
         set: { count: dhikrCount, updatedAt: now, deleted: false, dirty: true },
       });
   }
@@ -126,7 +126,7 @@ export async function incrementDhikrCount(
       dirty: true,
     })
     .onConflictDoUpdate({
-      target: [dhikrLogs.userId, dhikrLogs.date, dhikrLogs.dhikrId],
+      target: dhikrLogs.id,
       set: { count: newCount, updatedAt: now, deleted: false, dirty: true },
     });
 
