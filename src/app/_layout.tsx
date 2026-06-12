@@ -6,6 +6,7 @@ import { useFonts, Cairo_400Regular } from '@expo-google-fonts/cairo';
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
 import { db } from '@/db/client';
 import migrations from '../../drizzle/migrations';
+import { seedDatabase } from '@/db/seed';
 import { initAuth } from '@/state/auth';
 import { runSync } from '@/state/sync';
 import { theme } from '@/ui/theme';
@@ -29,7 +30,10 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (!success) return;
-    initAuth().then(() => runSync());
+    seedDatabase()
+      .then(() => initAuth())
+      .then(() => runSync())
+      .catch((err) => console.error('Database seed error:', err));
 
     const subscription = AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
       if (nextAppState === 'active') {
