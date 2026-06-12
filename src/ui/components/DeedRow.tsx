@@ -172,11 +172,21 @@ export function DeedRow({
             ({toArabicNumeral(currentValue)}/{toArabicNumeral(target)})
           </Text>
         </View>
-        <Ionicons
-          name={done ? 'checkbox' : 'square-outline'}
-          size={26}
-          color={done ? theme.colors.primary : theme.colors.muted}
-        />
+        <Pressable
+          testID="btn-quick-toggle"
+          onPress={() => {
+            const nextVal = done ? 0 : target;
+            const nextStatus = done ? 'not_yet' : 'done';
+            onChange(nextStatus, nextVal);
+          }}
+          hitSlop={12}
+        >
+          <Ionicons
+            name={done ? 'checkbox' : 'square-outline'}
+            size={26}
+            color={done ? theme.colors.primary : theme.colors.muted}
+          />
+        </Pressable>
       </Pressable>
 
       {/* Embedded Progress bar only visible when collapsed */}

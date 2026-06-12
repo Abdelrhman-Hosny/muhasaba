@@ -91,4 +91,34 @@ describe('DeedRow', () => {
 
     expect(onChange).toHaveBeenCalledWith('not_yet', 8);
   });
+
+  it('instantly marks measured deeds as done when checkbox is tapped', () => {
+    const onChange = jest.fn();
+    const deed: DeedRowType = {
+      id: 'deed_quran',
+      userId: null,
+      definitionId: 'quran_reading',
+      sectionId: 'sec_quran',
+      name: 'ورد التلاوة',
+      type: 'measured',
+      schedule: 'daily',
+      createdAt: '2026-06-12',
+      sortOrder: 1,
+      deletedAt: null,
+      linkedDhikrId: null,
+      target: 10,
+      updatedAt: Date.now(),
+      deleted: false,
+      dirty: false,
+    };
+
+    const { getByTestId } = render(
+      <DeedRow deed={deed} log={null} onChange={onChange} />
+    );
+
+    // Press quick toggle button (the checkbox icon)
+    fireEvent.press(getByTestId('btn-quick-toggle'));
+
+    expect(onChange).toHaveBeenCalledWith('done', 10);
+  });
 });
