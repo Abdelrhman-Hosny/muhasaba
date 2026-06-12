@@ -228,7 +228,7 @@ export function DeedRow({
                   borderColor: theme.colors.primary,
                 }}
               >
-                <Text style={{ fontFamily: theme.font, color: theme.colors.primary, fontSize: 15 }}>+١</Text>
+                <Text style={{ fontFamily: theme.font, color: theme.colors.primary, fontSize: 15 }}>+1</Text>
               </Pressable>
 
               {/* +5 */}
@@ -244,7 +244,7 @@ export function DeedRow({
                   borderColor: theme.colors.primary,
                 }}
               >
-                <Text style={{ fontFamily: theme.font, color: theme.colors.primary, fontSize: 15 }}>+٥</Text>
+                <Text style={{ fontFamily: theme.font, color: theme.colors.primary, fontSize: 15 }}>+5</Text>
               </Pressable>
 
               {/* +10 */}
@@ -260,7 +260,7 @@ export function DeedRow({
                   borderColor: theme.colors.primary,
                 }}
               >
-                <Text style={{ fontFamily: theme.font, color: theme.colors.primary, fontSize: 15 }}>+١٠</Text>
+                <Text style={{ fontFamily: theme.font, color: theme.colors.primary, fontSize: 15 }}>+10</Text>
               </Pressable>
 
               {/* +50 */}
@@ -276,7 +276,7 @@ export function DeedRow({
                   borderColor: theme.colors.primary,
                 }}
               >
-                <Text style={{ fontFamily: theme.font, color: theme.colors.primary, fontSize: 15 }}>+٥٠</Text>
+                <Text style={{ fontFamily: theme.font, color: theme.colors.primary, fontSize: 15 }}>+50</Text>
               </Pressable>
 
               {/* -10 (Correction) */}
@@ -294,7 +294,7 @@ export function DeedRow({
                   opacity: currentValue === 0 ? 0.5 : 1,
                 }}
               >
-                <Text style={{ fontFamily: theme.font, color: currentValue === 0 ? 'rgba(0,0,0,0.3)' : theme.colors.text, fontSize: 15 }}>-١٠</Text>
+                <Text style={{ fontFamily: theme.font, color: currentValue === 0 ? 'rgba(0,0,0,0.3)' : theme.colors.text, fontSize: 15 }}>-10</Text>
               </Pressable>
 
               {/* Reset (تصفير) */}

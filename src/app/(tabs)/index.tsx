@@ -75,7 +75,7 @@ export default function DayScreen() {
           const active = d === selected;
           const lbl = dayLabel(d, today);
           const pct = datePercentages[d] ?? 0;
-          const pctLabel = pct > 0 ? `${toArabicNumeral(pct)}٪` : '--';
+          const pctLabel = pct > 0 ? `${toArabicNumeral(pct)}%` : '--';
           return (
             <Pressable key={d} onPress={() => setSelected(d)}
               style={{
@@ -102,7 +102,7 @@ export default function DayScreen() {
         <View style={{ flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
           <Text style={{ color: theme.colors.muted, fontFamily: theme.font, fontSize: 13 }}>{ar.summary.completed}</Text>
           <Text style={{ color: theme.colors.text, fontFamily: theme.font, fontSize: 15 }}>
-            {formattedScore} / {toArabicNumeral(totalTasks)} ({toArabicNumeral(todayPercentage)}٪)
+            {formattedScore} / {toArabicNumeral(totalTasks)} ({toArabicNumeral(todayPercentage)}%)
           </Text>
         </View>
         <View style={{ height: 6, borderRadius: 3, backgroundColor: theme.colors.notYet, overflow: 'hidden' }}>

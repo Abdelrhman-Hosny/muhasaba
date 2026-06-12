@@ -45,8 +45,7 @@ export function editableDates(today: string, daysBack: number): string[] {
   return out;
 }
 
-/** Convert a number to Eastern-Arabic numeral string (٠١٢…٩). */
-const ARABIC_DIGITS = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
+/** Convert a number to Western numeral string. */
 export function toArabicNumeral(n: number): string {
-  return String(n).replace(/\d/g, (d) => ARABIC_DIGITS[parseInt(d)]);
+  return String(n);
 }

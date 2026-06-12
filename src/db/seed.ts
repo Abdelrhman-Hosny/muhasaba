@@ -79,7 +79,7 @@ export async function seedDatabase() {
     { id: 'deed_fajr', definitionId: 'fajr', sectionId: 'sec_morning', name: 'صلاة الفجر', type: 'boolean', schedule: 'daily', createdAt: todayStr, sortOrder: 1, updatedAt: Date.now() },
     { id: 'deed_sunnah_fajr', definitionId: 'sunnah_fajr', sectionId: 'sec_morning', name: 'سنة الفجر', type: 'boolean', schedule: 'daily', createdAt: todayStr, sortOrder: 2, updatedAt: Date.now() },
     { id: 'deed_adhkar_morning', definitionId: 'adhkar_morning', sectionId: 'sec_morning', name: 'أذكار الصباح', type: 'boolean', schedule: 'daily', createdAt: todayStr, sortOrder: 3, updatedAt: Date.now() },
-    { id: 'deed_istighfar_100', definitionId: null, sectionId: 'sec_morning', name: 'الاستغفار (١٠٠ مرة)', type: 'boolean', schedule: 'daily', createdAt: todayStr, sortOrder: 4, linkedDhikrId: 'dhikr_istighfar', target: 100, updatedAt: Date.now() },
+    { id: 'deed_istighfar_100', definitionId: null, sectionId: 'sec_morning', name: 'الاستغفار (100 مرة)', type: 'boolean', schedule: 'daily', createdAt: todayStr, sortOrder: 4, linkedDhikrId: 'dhikr_istighfar', target: 100, updatedAt: Date.now() },
 
     // Dhuhr Section (الظهر)
     { id: 'deed_dhuhr', definitionId: 'dhuhr', sectionId: 'sec_dhuhr', name: 'صلاة الظهر', type: 'boolean', schedule: 'daily', createdAt: todayStr, sortOrder: 1, updatedAt: Date.now() },
