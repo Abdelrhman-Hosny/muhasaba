@@ -23,6 +23,22 @@ export async function setDeedLog(
   const userId = user$.get()?.id ?? null;
   const logId = localLogId(date, deedId);
 
+  // 1. Fetch the deed definition to see if it is linked to a dhikr counter
+  const deedData = await db
+    .select()
+    .from(deeds)
+    .where(eq(deeds.id, deedId))
+    .limit(1);
+
+  const deed = deedData[0];
+
+  // 2. Determine final log value
+  let finalValue = value;
+  if (deed && deed.type === 'measured' && value === null) {
+    finalValue = status === 'done' ? (deed.target ?? 0) : 0;
+  }
+
+  // 3. Upsert deed log
   await db
     .insert(deedLogs)
     .values({
@@ -31,7 +47,7 @@ export async function setDeedLog(
       deedId,
       date,
       status,
-      value,
+      value: finalValue,
       note,
       updatedAt: now,
       deleted: false,
@@ -39,8 +55,36 @@ export async function setDeedLog(
     })
     .onConflictDoUpdate({
       target: [deedLogs.userId, deedLogs.date, deedLogs.deedId],
-      set: { status, value, note, updatedAt: now, deleted: false, dirty: true },
+      set: { status, value: finalValue, note, updatedAt: now, deleted: false, dirty: true },
     });
+
+  // 4. Perform Two-Way Sync to update linked Dhikr log
+  if (deed && deed.linkedDhikrId) {
+    const dhikrLogId = localLogId(date, deed.linkedDhikrId);
+    let dhikrCount = 0;
+    if (deed.type === 'boolean') {
+      dhikrCount = status === 'done' ? (deed.target ?? 100) : 0;
+    } else {
+      dhikrCount = finalValue ?? 0;
+    }
+
+    await db
+      .insert(dhikrLogs)
+      .values({
+        id: dhikrLogId,
+        userId,
+        dhikrId: deed.linkedDhikrId,
+        date,
+        count: dhikrCount,
+        updatedAt: now,
+        deleted: false,
+        dirty: true,
+      })
+      .onConflictDoUpdate({
+        target: [dhikrLogs.userId, dhikrLogs.date, dhikrLogs.dhikrId],
+        set: { count: dhikrCount, updatedAt: now, deleted: false, dirty: true },
+      });
+  }
 
   scheduleSync();
 }

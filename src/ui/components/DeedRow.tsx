@@ -143,6 +143,14 @@ export function DeedRow({
   const currentValue = log?.value ?? 0;
   const progressPct = Math.min(100, (currentValue / target) * 100);
 
+  const handleIncrement = (amount: number) => {
+    const nextVal = Math.max(0, Math.min(target, currentValue + amount));
+    const nextStatus = nextVal >= target ? 'done' : 'not_yet';
+    onChange(nextStatus, nextVal);
+  };
+
+  const isLargeCounter = target >= 15 || deed.linkedDhikrId !== null;
+
   return (
     <View
       style={{
@@ -196,23 +204,127 @@ export function DeedRow({
         </View>
       )}
 
-      {/* Gesture slider visible when expanded */}
+      {/* Gesture slider or increment chips visible when expanded */}
       {expanded && (
         <View
           style={{
-            paddingVertical: 12,
+            paddingVertical: 14,
             paddingHorizontal: 20,
             backgroundColor: 'rgba(0,0,0,0.02)',
           }}
         >
-          <CustomSlider
-            value={currentValue}
-            max={target}
-            onChange={(val) => {
-              const nextStatus = val >= target ? 'done' : 'not_yet';
-              onChange(nextStatus, val);
-            }}
-          />
+          {isLargeCounter ? (
+            <View style={{ flexDirection: 'row-reverse', flexWrap: 'wrap', justifyContent: 'center', gap: 8 }}>
+              {/* +1 */}
+              <Pressable
+                testID="btn-chip-1"
+                onPress={() => handleIncrement(1)}
+                style={{
+                  paddingVertical: 8,
+                  paddingHorizontal: 14,
+                  borderRadius: 20,
+                  backgroundColor: '#fff',
+                  borderWidth: 1,
+                  borderColor: theme.colors.primary,
+                }}
+              >
+                <Text style={{ fontFamily: theme.font, color: theme.colors.primary, fontSize: 15 }}>+١</Text>
+              </Pressable>
+
+              {/* +10 */}
+              <Pressable
+                testID="btn-chip-10"
+                onPress={() => handleIncrement(10)}
+                style={{
+                  paddingVertical: 8,
+                  paddingHorizontal: 14,
+                  borderRadius: 20,
+                  backgroundColor: '#fff',
+                  borderWidth: 1,
+                  borderColor: theme.colors.primary,
+                }}
+              >
+                <Text style={{ fontFamily: theme.font, color: theme.colors.primary, fontSize: 15 }}>+١٠</Text>
+              </Pressable>
+
+              {/* +33 (Traditional Tasbih Cycle) */}
+              <Pressable
+                testID="btn-chip-33"
+                onPress={() => handleIncrement(33)}
+                style={{
+                  paddingVertical: 8,
+                  paddingHorizontal: 14,
+                  borderRadius: 20,
+                  backgroundColor: '#fff',
+                  borderWidth: 1,
+                  borderColor: theme.colors.primary,
+                }}
+              >
+                <Text style={{ fontFamily: theme.font, color: theme.colors.primary, fontSize: 15 }}>+٣٣</Text>
+              </Pressable>
+
+              {/* +100 */}
+              <Pressable
+                testID="btn-chip-100"
+                onPress={() => handleIncrement(100)}
+                style={{
+                  paddingVertical: 8,
+                  paddingHorizontal: 14,
+                  borderRadius: 20,
+                  backgroundColor: '#fff',
+                  borderWidth: 1,
+                  borderColor: theme.colors.primary,
+                }}
+              >
+                <Text style={{ fontFamily: theme.font, color: theme.colors.primary, fontSize: 15 }}>+١٠٠</Text>
+              </Pressable>
+
+              {/* -10 (Correction) */}
+              <Pressable
+                testID="btn-chip-dec"
+                onPress={() => handleIncrement(-10)}
+                disabled={currentValue === 0}
+                style={{
+                  paddingVertical: 8,
+                  paddingHorizontal: 14,
+                  borderRadius: 20,
+                  backgroundColor: '#fff',
+                  borderWidth: 1,
+                  borderColor: currentValue === 0 ? 'rgba(0,0,0,0.1)' : theme.colors.text,
+                  opacity: currentValue === 0 ? 0.5 : 1,
+                }}
+              >
+                <Text style={{ fontFamily: theme.font, color: currentValue === 0 ? 'rgba(0,0,0,0.3)' : theme.colors.text, fontSize: 15 }}>-١٠</Text>
+              </Pressable>
+
+              {/* Reset (تصفير) */}
+              <Pressable
+                testID="btn-chip-reset"
+                onPress={() => handleIncrement(-currentValue)}
+                disabled={currentValue === 0}
+                style={{
+                  paddingVertical: 8,
+                  paddingHorizontal: 14,
+                  borderRadius: 20,
+                  backgroundColor: '#fff',
+                  borderWidth: 1,
+                  borderColor: currentValue === 0 ? 'rgba(0,0,0,0.1)' : 'red',
+                  opacity: currentValue === 0 ? 0.5 : 1,
+                }}
+              >
+                <Text style={{ fontFamily: theme.font, color: currentValue === 0 ? 'rgba(0,0,0,0.3)' : 'red', fontSize: 15 }}>تصفير</Text>
+              </Pressable>
+            </View>
+          ) : (
+            <CustomSlider
+              value={currentValue}
+              max={target}
+              onChange={(val) => {
+                const nextStatus = val >= target ? 'done' : 'not_yet';
+                onChange(nextStatus, val);
+              }}
+            />
+          )}
         </View>
       )}
     </View>

@@ -121,4 +121,58 @@ describe('DeedRow', () => {
 
     expect(onChange).toHaveBeenCalledWith('done', 10);
   });
+
+  it('allows incrementing using chips for large target deeds when expanded', () => {
+    const onChange = jest.fn();
+    const deed: DeedRowType = {
+      id: 'deed_istighfar',
+      userId: null,
+      definitionId: null,
+      sectionId: 'sec_morning',
+      name: 'الاستغفار',
+      type: 'measured',
+      schedule: 'daily',
+      createdAt: '2026-06-12',
+      sortOrder: 4,
+      deletedAt: null,
+      linkedDhikrId: 'dhikr_istighfar',
+      target: 100,
+      updatedAt: Date.now(),
+      deleted: false,
+      dirty: false,
+    };
+
+    const log: DeedLogRow = {
+      id: '2026-06-12:deed_istighfar',
+      userId: null,
+      deedId: 'deed_istighfar',
+      date: '2026-06-12',
+      status: 'not_yet',
+      value: 0,
+      note: null,
+      updatedAt: Date.now(),
+      deleted: false,
+      dirty: false,
+    };
+
+    const { getByTestId, queryByTestId } = render(
+      <DeedRow deed={deed} log={log} onChange={onChange} />
+    );
+
+    // Increment chips should be hidden by default
+    expect(queryByTestId('btn-chip-33')).toBeNull();
+
+    // Expand the row
+    fireEvent.press(getByTestId('btn-expand'));
+
+    // Check that chips are displayed
+    expect(getByTestId('btn-chip-1')).toBeTruthy();
+    expect(getByTestId('btn-chip-10')).toBeTruthy();
+    expect(getByTestId('btn-chip-33')).toBeTruthy();
+    expect(getByTestId('btn-chip-100')).toBeTruthy();
+
+    // Tap +33 chip
+    fireEvent.press(getByTestId('btn-chip-33'));
+    expect(onChange).toHaveBeenCalledWith('not_yet', 33);
+  });
 });
