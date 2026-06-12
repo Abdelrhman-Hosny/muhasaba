@@ -10,6 +10,8 @@ export const ar = {
     signInPrompt: 'سجّل الدخول لحفظ بياناتك ومزامنتها',
   },
   sync: { synced: 'متزامن', syncing: 'جارٍ المزامنة…', offline: 'دون اتصال', localOnly: 'محلي فقط' },
+  tabs: { day: 'اليوم', week: 'الأسبوع', counters: 'الأذكار' },
   days: { today: 'اليوم', yesterday: 'أمس' },
   summary: { completed: 'صلوات مكتملة' },
+  header: { score: 'الدرجة' },
 };

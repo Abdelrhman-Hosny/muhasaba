@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import { useMemo } from 'react';
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
 import { db } from '@/db/client';
@@ -52,4 +52,26 @@ export function useDay(date: string): DayStatuses {
     }
     return day;
   }, [data]);
+}
+
+/** Reactive: done-count for a range of dates (for date-strip percentages). */
+export function useDatesDoneCount(dates: string[]): Record<string, number> {
+  const { data } = useLiveQuery(
+    db
+      .select()
+      .from(prayerLogs)
+      .where(and(inArray(prayerLogs.date, dates), eq(prayerLogs.deleted, false))),
+    [dates.join(',')],
+  );
+
+  return useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const d of dates) counts[d] = 0;
+    for (const row of data ?? []) {
+      if (normalizeStatus(row.status) === 'done') {
+        counts[row.date] = (counts[row.date] ?? 0) + 1;
+      }
+    }
+    return counts;
+  }, [data, dates]);
 }

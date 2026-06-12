@@ -8,6 +8,6 @@ describe('PrayerRow', () => {
       <PrayerRow prayer="fajr" status="not_yet" onChange={onChange} />,
     );
     fireEvent.press(getByText('الفجر'));
-    expect(onChange).toHaveBeenCalledWith('on_time');
+    expect(onChange).toHaveBeenCalledWith('done');
   });
 });
