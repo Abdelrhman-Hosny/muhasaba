@@ -16,4 +16,18 @@ export const ar = {
   days: { today: 'اليوم', yesterday: 'أمس' },
   summary: { completed: 'صلوات مكتملة' },
   header: { score: 'الدرجة' },
+  counters: {
+    title: 'الأذكار المطلقة',
+    current: 'الحالي',
+    target: 'الهدف',
+    newCounter: 'ذكر جديد',
+    name: 'اسم الذكر',
+    targetOptional: 'الهدف اليومي (اختياري)',
+    add: 'إضافة',
+    cancel: 'إلغاء',
+    custom: 'مخصص',
+    save: 'حفظ',
+    reset: 'تصفير',
+    noCounters: 'لا توجد أذكار مضافة حاليًا. اضغط على جديد للبدء.',
+  },
 };

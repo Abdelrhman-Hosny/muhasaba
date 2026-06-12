@@ -1,4 +1,4 @@
-import { and, eq, inArray, lte, or, isNull, gt } from 'drizzle-orm';
+import { and, eq, inArray, lte, or, isNull, gt, sql } from 'drizzle-orm';
 import { useMemo } from 'react';
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
 import { db } from '@/db/client';
@@ -139,7 +139,8 @@ export async function incrementDhikrCount(
   for (const deed of linkedDeeds) {
     if (deed.target) {
       const isDone = newCount >= deed.target;
-      await setDeedLog(date, deed.id, isDone ? 'done' : 'not_yet', isDone ? deed.target : null);
+      const val = deed.type === 'measured' ? newCount : (isDone ? deed.target : null);
+      await setDeedLog(date, deed.id, isDone ? 'done' : 'not_yet', val);
     }
   }
 
@@ -343,4 +344,68 @@ export function useDatesPercentages(dates: string[]): Record<string, number> {
 
     return percentages;
   }, [rawDeeds, rawLogs, dates]);
+}
+
+/**
+ * Creates a new custom Dhikr counter locally, marked as dirty.
+ */
+import * as Crypto from 'expo-crypto';
+import { todayKey } from '@/domain/dates';
+
+export async function addDhikrCounter(name: string, targetVal: number | null = null): Promise<void> {
+  const now = Date.now();
+  const userId = user$.get()?.id ?? null;
+  const today = todayKey();
+
+  // Get next sort order
+  const existing = await db
+    .select({ count: sql`count(*)` })
+    .from(dhikrs)
+    .where(eq(dhikrs.deleted, false));
+  const nextSort = (existing[0] as any)?.count ?? 0;
+
+  await db.insert(dhikrs).values({
+    id: Crypto.randomUUID(),
+    userId,
+    name,
+    sortOrder: nextSort,
+    target: targetVal,
+    createdAt: today,
+    updatedAt: now,
+    deleted: false,
+    dirty: true,
+  });
+
+  scheduleSync();
+}
+
+/**
+ * Soft-deletes a Dhikr counter locally, marked as dirty for syncing.
+ */
+export async function deleteDhikrCounter(id: string): Promise<void> {
+  const now = Date.now();
+  const today = todayKey();
+
+  await db
+    .update(dhikrs)
+    .set({
+      deleted: true,
+      deletedAt: today,
+      updatedAt: now,
+      dirty: true,
+    })
+    .where(eq(dhikrs.id, id));
+
+  // Also soft delete its deeds if any scorecard item is linked to it
+  await db
+    .update(deeds)
+    .set({
+      deleted: true,
+      deletedAt: today,
+      updatedAt: now,
+      dirty: true,
+    })
+    .where(eq(deeds.linkedDhikrId, id));
+
+  scheduleSync();
 }

@@ -1,13 +1,423 @@
-import { View, Text } from 'react-native';
+import { useState, useEffect } from 'react';
+import { View, Text, Pressable, ScrollView, TextInput, Modal } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { theme } from '@/ui/theme';
 import { ar } from '@/i18n/ar';
+import { toArabicNumeral } from '@/i18n/format';
+import { useDhikrs, incrementDhikrCount, addDhikrCounter, deleteDhikrCounter } from '@/state/deedStore';
+import { todayKey } from '@/domain/dates';
+import { Ionicons } from '@expo/vector-icons';
+import { Drawer } from '@/ui/components/Drawer';
 
 export default function CountersScreen() {
   const insets = useSafeAreaInsets();
+  const today = todayKey();
+  const dhikrsList = useDhikrs(today);
+
+  // States
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [customValue, setCustomValue] = useState<string>('');
+  const [modalVisible, setModalVisible] = useState(false);
+  const [drawerVisible, setDrawerVisible] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [newTarget, setNewTarget] = useState('');
+
+  // Auto-select the first counter if none is selected
+  useEffect(() => {
+    if (dhikrsList.length > 0 && !selectedId) {
+      setSelectedId(dhikrsList[0].dhikr.id);
+    }
+  }, [dhikrsList, selectedId]);
+
+  const selectedItem = dhikrsList.find((item) => item.dhikr.id === selectedId);
+  const currentCount = selectedItem?.log?.count ?? 0;
+
+  const handleIncrement = async (amount: number) => {
+    if (!selectedId) return;
+    await incrementDhikrCount(today, selectedId, amount);
+  };
+
+  const handleCustomSave = async () => {
+    const val = parseInt(customValue, 10);
+    if (isNaN(val) || val <= 0 || !selectedId) return;
+    await incrementDhikrCount(today, selectedId, val);
+    setCustomValue('');
+  };
+
+  const handleReset = async () => {
+    if (!selectedId || currentCount === 0) return;
+    await incrementDhikrCount(today, selectedId, -currentCount);
+  };
+
+  const handleAddCounter = async () => {
+    if (!newName.trim()) return;
+    const targetVal = newTarget ? parseInt(newTarget, 10) : null;
+    await addDhikrCounter(newName.trim(), isNaN(targetVal as any) ? null : targetVal);
+    setNewName('');
+    setNewTarget('');
+    setModalVisible(false);
+  };
+
+  const handleDelete = async (id: string) => {
+    await deleteDhikrCounter(id);
+    if (selectedId === id) {
+      setSelectedId(null);
+    }
+  };
+
   return (
-    <View style={{ flex: 1, backgroundColor: theme.colors.bg, paddingTop: insets.top, justifyContent: 'center', alignItems: 'center' }}>
-      <Text style={{ color: theme.colors.muted, fontFamily: theme.font, fontSize: 18 }}>{ar.tabs.counters}</Text>
+    <View style={{ flex: 1, backgroundColor: theme.colors.bg, paddingTop: insets.top }}>
+      {/* Header */}
+      <View style={{ flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'space-between', padding: 16 }}>
+        <View style={{ flexDirection: 'row-reverse', alignItems: 'center', gap: 12 }}>
+          <Text style={{ color: theme.colors.text, fontFamily: theme.font, fontSize: 20, fontWeight: 'bold' }}>
+            {ar.counters.title}
+          </Text>
+          <Pressable
+            testID="btn-new-counter"
+            hitSlop={8}
+            onPress={() => setModalVisible(true)}
+            style={{
+              flexDirection: 'row-reverse',
+              alignItems: 'center',
+              gap: 4,
+              backgroundColor: 'rgba(0,0,0,0.03)',
+              paddingVertical: 6,
+              paddingHorizontal: 10,
+              borderRadius: 12,
+            }}
+          >
+            <Ionicons name="add" size={20} color={theme.colors.primary} />
+            <Text style={{ color: theme.colors.primary, fontFamily: theme.font, fontSize: 14 }}>
+              جديد
+            </Text>
+          </Pressable>
+        </View>
+        <Pressable testID="btn-drawer-toggle" hitSlop={8} onPress={() => setDrawerVisible(true)}>
+          <Ionicons name="menu-outline" size={26} color={theme.colors.muted} />
+        </Pressable>
+      </View>
+
+      {/* Split view list (Scrollable) */}
+      <ScrollView
+        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 20 }}
+        style={{ flex: 1 }}
+      >
+        {dhikrsList.length === 0 ? (
+          <View style={{ alignItems: 'center', marginTop: 40 }}>
+            <Text style={{ color: theme.colors.muted, fontFamily: theme.font, textAlign: 'center', fontSize: 16 }}>
+              {ar.counters.noCounters}
+            </Text>
+          </View>
+        ) : (
+          dhikrsList.map(({ dhikr, log }) => {
+            const active = dhikr.id === selectedId;
+            const count = log?.count ?? 0;
+            const target = dhikr.target;
+            const hasTarget = target !== null && target > 0;
+            const completed = hasTarget && count >= (target ?? 0);
+
+            return (
+              <Pressable
+                key={dhikr.id}
+                testID={`counter-row-${dhikr.id}`}
+                onPress={() => setSelectedId(dhikr.id)}
+                style={{
+                  flexDirection: 'row-reverse',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  backgroundColor: active ? theme.colors.surfaceDone : theme.colors.surface,
+                  borderWidth: 1.5,
+                  borderColor: active ? theme.colors.primary : 'transparent',
+                  padding: 16,
+                  borderRadius: 14,
+                  marginBottom: 10,
+                  elevation: active ? 1 : 0,
+                }}
+              >
+                <View style={{ flexDirection: 'column', alignItems: 'flex-end', flex: 1, paddingRight: 8 }}>
+                  <Text style={{ color: theme.colors.text, fontFamily: theme.font, fontSize: 18, fontWeight: 'bold' }}>
+                    {dhikr.name}
+                  </Text>
+                  <View style={{ flexDirection: 'row-reverse', alignItems: 'center', gap: 6, marginTop: 4 }}>
+                    <Text style={{ color: theme.colors.muted, fontFamily: theme.font, fontSize: 14 }}>
+                      {ar.counters.current}: {toArabicNumeral(count)}
+                    </Text>
+                    {hasTarget && (
+                      <Text style={{ color: completed ? theme.colors.primary : theme.colors.muted, fontFamily: theme.font, fontSize: 14 }}>
+                        ({ar.counters.target}: {toArabicNumeral(target ?? 0)})
+                      </Text>
+                    )}
+                  </View>
+                </View>
+
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                  {/* Delete Button */}
+                  <Pressable
+                    testID={`btn-delete-${dhikr.id}`}
+                    onPress={() => handleDelete(dhikr.id)}
+                    hitSlop={8}
+                    style={{ padding: 4 }}
+                  >
+                    <Ionicons name="trash-outline" size={20} color={theme.colors.muted} />
+                  </Pressable>
+
+                  {/* Active Indicator Icon */}
+                  {active && (
+                    <Ionicons name="checkmark-circle" size={24} color={theme.colors.primary} />
+                  )}
+                </View>
+              </Pressable>
+            );
+          })
+        )}
+      </ScrollView>
+
+      {/* Persistent Keypad Panel */}
+      {selectedId && (
+        <View
+          style={{
+            borderTopWidth: 1,
+            borderTopColor: 'rgba(0,0,0,0.08)',
+            padding: 16,
+            paddingBottom: insets.bottom + 16,
+            backgroundColor: theme.colors.surface,
+          }}
+        >
+          {/* Keypad Grid */}
+          <View style={{ flexDirection: 'row-reverse', gap: 10, marginBottom: 10 }}>
+            {['+1', '+5', '+10'].map((label, i) => {
+              const amount = [1, 5, 10][i];
+              return (
+                <Pressable
+                  key={label}
+                  testID={`btn-keypad-${amount}`}
+                  onPress={() => handleIncrement(amount)}
+                  style={{
+                    flex: 1,
+                    height: 48,
+                    borderRadius: 12,
+                    backgroundColor: theme.colors.surfaceDone,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderWidth: 1,
+                    borderColor: theme.colors.primary,
+                  }}
+                >
+                  <Text style={{ fontFamily: theme.font, fontSize: 18, color: theme.colors.primary, fontWeight: 'bold' }}>
+                    {toArabicNumeral(amount)}+
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          <View style={{ flexDirection: 'row-reverse', gap: 10, marginBottom: 12 }}>
+            {['+25', '+50', '+100'].map((label, i) => {
+              const amount = [25, 50, 100][i];
+              return (
+                <Pressable
+                  key={label}
+                  testID={`btn-keypad-${amount}`}
+                  onPress={() => handleIncrement(amount)}
+                  style={{
+                    flex: 1,
+                    height: 48,
+                    borderRadius: 12,
+                    backgroundColor: theme.colors.surfaceDone,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderWidth: 1,
+                    borderColor: theme.colors.primary,
+                  }}
+                >
+                  <Text style={{ fontFamily: theme.font, fontSize: 18, color: theme.colors.primary, fontWeight: 'bold' }}>
+                    {toArabicNumeral(amount)}+
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          {/* Custom entry & Reset */}
+          <View style={{ flexDirection: 'row-reverse', alignItems: 'center', gap: 10 }}>
+            {/* Custom Input */}
+            <View style={{ flex: 2, height: 48, flexDirection: 'row-reverse', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.03)', borderRadius: 12, paddingHorizontal: 12 }}>
+              <TextInput
+                testID="input-custom-count"
+                placeholder={ar.counters.custom}
+                keyboardType="numeric"
+                value={customValue}
+                onChangeText={setCustomValue}
+                style={{
+                  flex: 1,
+                  fontFamily: theme.font,
+                  fontSize: 16,
+                  color: theme.colors.text,
+                  textAlign: 'right',
+                }}
+              />
+              <Pressable
+                testID="btn-custom-save"
+                onPress={handleCustomSave}
+                style={{
+                  paddingVertical: 6,
+                  paddingHorizontal: 12,
+                  backgroundColor: theme.colors.primary,
+                  borderRadius: 8,
+                }}
+              >
+                <Text style={{ fontFamily: theme.font, color: '#fff', fontSize: 14 }}>
+                  {ar.counters.save}
+                </Text>
+              </Pressable>
+            </View>
+
+            {/* Reset */}
+            <Pressable
+              testID="btn-reset"
+              onPress={handleReset}
+              style={{
+                flex: 1,
+                height: 48,
+                borderRadius: 12,
+                backgroundColor: 'rgba(255, 0, 0, 0.05)',
+                borderWidth: 1,
+                borderColor: 'red',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Text style={{ fontFamily: theme.font, fontSize: 16, color: 'red', fontWeight: 'bold' }}>
+                {ar.counters.reset}
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+      )}
+
+      {/* Add New Counter Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View
+          style={{
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          }}
+        >
+          <View
+            style={{
+              width: '85%',
+              backgroundColor: theme.colors.surface,
+              borderRadius: 20,
+              padding: 24,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.25,
+              shadowRadius: 4,
+              elevation: 5,
+            }}
+          >
+            <Text
+              style={{
+                fontFamily: theme.font,
+                fontSize: 20,
+                fontWeight: 'bold',
+                color: theme.colors.text,
+                textAlign: 'center',
+                marginBottom: 20,
+              }}
+            >
+              {ar.counters.newCounter}
+            </Text>
+
+            {/* Name input */}
+            <TextInput
+              testID="input-new-name"
+              placeholder={ar.counters.name}
+              value={newName}
+              onChangeText={setNewName}
+              style={{
+                width: '100%',
+                height: 48,
+                backgroundColor: 'rgba(0,0,0,0.03)',
+                borderRadius: 12,
+                paddingHorizontal: 16,
+                fontFamily: theme.font,
+                fontSize: 16,
+                textAlign: 'right',
+                color: theme.colors.text,
+                marginBottom: 12,
+              }}
+            />
+
+            {/* Target input */}
+            <TextInput
+              testID="input-new-target"
+              placeholder={ar.counters.targetOptional}
+              keyboardType="numeric"
+              value={newTarget}
+              onChangeText={setNewTarget}
+              style={{
+                width: '100%',
+                height: 48,
+                backgroundColor: 'rgba(0,0,0,0.03)',
+                borderRadius: 12,
+                paddingHorizontal: 16,
+                fontFamily: theme.font,
+                fontSize: 16,
+                textAlign: 'right',
+                color: theme.colors.text,
+                marginBottom: 24,
+              }}
+            />
+
+            {/* Modal Actions */}
+            <View style={{ flexDirection: 'row', gap: 12 }}>
+              <Pressable
+                testID="btn-modal-cancel"
+                onPress={() => setModalVisible(false)}
+                style={{
+                  flex: 1,
+                  height: 48,
+                  borderRadius: 12,
+                  backgroundColor: 'rgba(0,0,0,0.03)',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Text style={{ fontFamily: theme.font, fontSize: 16, color: theme.colors.muted }}>
+                  {ar.counters.cancel}
+                </Text>
+              </Pressable>
+
+              <Pressable
+                testID="btn-modal-add"
+                onPress={handleAddCounter}
+                style={{
+                  flex: 1,
+                  height: 48,
+                  borderRadius: 12,
+                  backgroundColor: theme.colors.primary,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Text style={{ fontFamily: theme.font, fontSize: 16, color: '#fff', fontWeight: 'bold' }}>
+                  {ar.counters.add}
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+      <Drawer visible={drawerVisible} onClose={() => setDrawerVisible(false)} />
     </View>
   );
 }
