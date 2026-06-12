@@ -106,6 +106,25 @@ Based on [UX spec](superpowers/specs/2026-06-11-ux-discussion-summary.md) and [A
 | Deleted | `src/ui/components/PrayerRow.tsx` |
 | Deleted | `__tests__/ui/PrayerRow.test.tsx` |
 
+## ✅ Iteration 7 — ذكر مطلق Counter Page (2026-06-12)
+
+### Logic, UI & Tests
+- [x] Split view: dhikr list (top) + quick-add keypad (bottom)
+- [x] Quick-add buttons: +١, +٥, +١٠, +٢٥, +٥٠, +١٠٠, مخصص
+- [x] Daily accumulation + daily reset
+- [x] Optional target + scorecard deed link (two-way sync, auto-completing scorecard deeds on target hit and reflecting partial progress for measured deeds)
+- [x] Custom counter creation modal with dynamic targets
+- [x] Hamburger menu integration for drawer navigation access from the counters tab
+- [x] Comprehensive Jest tests covering user interaction, customs, resets, modals, and safe-area context
+
+### Files touched
+| Action | File |
+|---|---|
+| Created | `__tests__/ui/counters.test.tsx` |
+| Modified | `src/app/(tabs)/counters.tsx` |
+| Modified | `src/i18n/ar.ts` |
+| Modified | `src/state/deedStore.ts` |
+
 ---
 
 ## 🔲 Remaining Work (by priority)
@@ -130,12 +149,6 @@ Based on [UX spec](superpowers/specs/2026-06-11-ux-discussion-summary.md) and [A
 - [ ] Reader: vertical list, each dhikr with text + tap-to-count
 - [ ] Finishing all items auto-marks deed done
 - [ ] Manual completion available inside reader
-
-### Iteration 7 — ذكر مطلق Counter Page
-- [ ] Split view: dhikr list (top) + quick-add keypad (bottom)
-- [ ] Quick-add buttons: +١, +٥, +١٠, +٢٥, +٥٠, +١٠٠, مخصص
-- [ ] Daily accumulation + daily reset
-- [ ] Optional target + scorecard deed link (auto-complete on target hit)
 
 ### Iteration 8 — Week Screen
 - [ ] "أعمال الأسبوع" section for weekly-anytime deeds
