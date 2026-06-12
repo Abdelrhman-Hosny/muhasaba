@@ -231,6 +231,22 @@ export function DeedRow({
                 <Text style={{ fontFamily: theme.font, color: theme.colors.primary, fontSize: 15 }}>+١</Text>
               </Pressable>
 
+              {/* +5 */}
+              <Pressable
+                testID="btn-chip-5"
+                onPress={() => handleIncrement(5)}
+                style={{
+                  paddingVertical: 8,
+                  paddingHorizontal: 14,
+                  borderRadius: 20,
+                  backgroundColor: '#fff',
+                  borderWidth: 1,
+                  borderColor: theme.colors.primary,
+                }}
+              >
+                <Text style={{ fontFamily: theme.font, color: theme.colors.primary, fontSize: 15 }}>+٥</Text>
+              </Pressable>
+
               {/* +10 */}
               <Pressable
                 testID="btn-chip-10"
@@ -247,10 +263,10 @@ export function DeedRow({
                 <Text style={{ fontFamily: theme.font, color: theme.colors.primary, fontSize: 15 }}>+١٠</Text>
               </Pressable>
 
-              {/* +33 (Traditional Tasbih Cycle) */}
+              {/* +50 */}
               <Pressable
-                testID="btn-chip-33"
-                onPress={() => handleIncrement(33)}
+                testID="btn-chip-50"
+                onPress={() => handleIncrement(50)}
                 style={{
                   paddingVertical: 8,
                   paddingHorizontal: 14,
@@ -260,23 +276,7 @@ export function DeedRow({
                   borderColor: theme.colors.primary,
                 }}
               >
-                <Text style={{ fontFamily: theme.font, color: theme.colors.primary, fontSize: 15 }}>+٣٣</Text>
-              </Pressable>
-
-              {/* +100 */}
-              <Pressable
-                testID="btn-chip-100"
-                onPress={() => handleIncrement(100)}
-                style={{
-                  paddingVertical: 8,
-                  paddingHorizontal: 14,
-                  borderRadius: 20,
-                  backgroundColor: '#fff',
-                  borderWidth: 1,
-                  borderColor: theme.colors.primary,
-                }}
-              >
-                <Text style={{ fontFamily: theme.font, color: theme.colors.primary, fontSize: 15 }}>+١٠٠</Text>
+                <Text style={{ fontFamily: theme.font, color: theme.colors.primary, fontSize: 15 }}>+٥٠</Text>
               </Pressable>
 
               {/* -10 (Correction) */}

@@ -160,19 +160,19 @@ describe('DeedRow', () => {
     );
 
     // Increment chips should be hidden by default
-    expect(queryByTestId('btn-chip-33')).toBeNull();
+    expect(queryByTestId('btn-chip-5')).toBeNull();
 
     // Expand the row
     fireEvent.press(getByTestId('btn-expand'));
 
     // Check that chips are displayed
     expect(getByTestId('btn-chip-1')).toBeTruthy();
+    expect(getByTestId('btn-chip-5')).toBeTruthy();
     expect(getByTestId('btn-chip-10')).toBeTruthy();
-    expect(getByTestId('btn-chip-33')).toBeTruthy();
-    expect(getByTestId('btn-chip-100')).toBeTruthy();
+    expect(getByTestId('btn-chip-50')).toBeTruthy();
 
-    // Tap +33 chip
-    fireEvent.press(getByTestId('btn-chip-33'));
-    expect(onChange).toHaveBeenCalledWith('not_yet', 33);
+    // Tap +5 chip
+    fireEvent.press(getByTestId('btn-chip-5'));
+    expect(onChange).toHaveBeenCalledWith('not_yet', 5);
   });
 });
