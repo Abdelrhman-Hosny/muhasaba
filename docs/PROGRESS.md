@@ -67,20 +67,48 @@ Based on [UX spec](superpowers/specs/2026-06-11-ux-discussion-summary.md) and [A
 | Modified | `src/state/prayerStore.ts` |
 | Modified | `src/i18n/ar.ts` |
 
+## ✅ Iteration 2 — Generalized Deed/Task Data Model (2026-06-12)
+
+### Schema & Migrations
+- [x] Create `sections` table (user's scorecard sections)
+- [x] Create `deeds` table (user's checklist items, supporting level targets)
+- [x] Create `deed_logs` table (completion log, with `note` support)
+- [x] Create `dhikrs` (free-tally counters list) and `dhikr_logs` (daily counts)
+- [x] Created Supabase migration SQL (`0002_deeds_model.sql`) and RLS policies
+- [x] Generated Drizzle SQLite migration (`0001_real_leper_queen.sql`)
+
+### Logic & Store
+- [x] Seed predefined database defaults (`src/db/seed.ts` containing default sections, deeds, and counters)
+- [x] Created `src/state/deedStore.ts` for reactive queries, day scores, and auto-completion of deeds linked to counters
+- [x] Refactored Sync Engine (`src/state/sync.ts`) to perform topological push/pull sync operations across all 5 tables to prevent foreign key errors
+
+### UI & Tests
+- [x] Refactored Day screen (`index.tsx`) to query dynamic sections/deeds and calculate percentage scores
+- [x] Added `DeedRow.tsx` rendering boolean checklist rows and expandable stepper components for measured tasks
+- [x] Replaced `PrayerRow.test.tsx` with `DeedRow.test.tsx` (fully green)
+
+### Files touched
+| Action | File |
+|---|---|
+| Created | `src/db/seed.ts` |
+| Created | `src/state/deedStore.ts` |
+| Created | `src/ui/components/DeedRow.tsx` |
+| Created | `__tests__/ui/DeedRow.test.tsx` |
+| Created | `supabase/migrations/0002_deeds_model.sql` |
+| Created | `drizzle/0001_real_leper_queen.sql` |
+| Created | `docs/schema_er_diagram.md` |
+| Created | `docs/schema_review.md` |
+| Modified | `src/db/schema.ts` |
+| Modified | `src/app/_layout.tsx` |
+| Modified | `src/app/(tabs)/index.tsx` |
+| Modified | `src/state/sync.ts` |
+| Deleted | `src/state/prayerStore.ts` |
+| Deleted | `src/ui/components/PrayerRow.tsx` |
+| Deleted | `__tests__/ui/PrayerRow.test.tsx` |
+
 ---
 
 ## 🔲 Remaining Work (by priority)
-
-### Iteration 2 — Generalized Deed/Task Data Model
-> *This is the architectural foundation everything else depends on.*
-
-- [ ] Create `sections` table (id, name, sort_order)
-- [ ] Create `deeds` table (id, section_id, name, type, schedule, sort_order)
-- [ ] Create `deed_logs` table (id, deed_id, date, status, value, updated_at, dirty, deleted)
-- [ ] Seed predefined deed library (prayers, adhkar, quran, etc.)
-- [ ] Migrate existing `prayer_logs` data into `deed_logs`
-- [ ] Refactor Day screen to render deeds by section with sticky headers
-- [ ] Support 3 schedule types: daily, specific weekdays, weekly-anytime
 
 ### Iteration 3 — Day Screen Polish
 - [ ] Sections with sticky headers (الصبح، الظهر، القرآن…)
