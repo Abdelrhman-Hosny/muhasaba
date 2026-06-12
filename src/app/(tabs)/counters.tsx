@@ -249,7 +249,7 @@ export default function CountersScreen() {
                 placeholder={ar.counters.custom}
                 keyboardType="number-pad"
                 value={customValue}
-                onChangeText={setCustomValue}
+                onChangeText={(text) => setCustomValue(text.replace(/[^0-9]/g, ''))}
                 onSubmitEditing={handleCustomSubmit}
                 returnKeyType="done"
                 style={{
@@ -400,7 +400,7 @@ export default function CountersScreen() {
               placeholder={ar.counters.targetOptional}
               keyboardType="number-pad"
               value={newTarget}
-              onChangeText={setNewTarget}
+              onChangeText={(text) => setNewTarget(text.replace(/[^0-9]/g, ''))}
               style={{
                 width: '100%',
                 height: 48,
