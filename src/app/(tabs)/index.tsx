@@ -7,7 +7,7 @@ import { DeedRow } from '@/ui/components/DeedRow';
 import { theme } from '@/ui/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { useState, useMemo } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View, I18nManager } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Drawer } from '@/ui/components/Drawer';
 
@@ -57,21 +57,21 @@ export default function DayScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.bg, paddingTop: insets.top }}>
-      {/* Header: ☰  الدرجة: N/M */}
-      <View style={{ flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'space-between', padding: 16 }}>
-        <Text style={{ color: theme.colors.text, fontFamily: theme.font, fontSize: 20 }}>
-          {ar.header.score}: {formattedScore}/{toArabicNumeral(totalTasks)}
+      {/* Header: ☰  App Name */}
+      <View style={{ flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse', alignItems: 'center', justifyContent: 'space-between', padding: 16 }}>
+        <Text style={{ color: theme.colors.text, fontFamily: theme.font, fontSize: 20, fontWeight: 'bold' }}>
+          {ar.appName}
         </Text>
         <Pressable hitSlop={8} onPress={() => setDrawerVisible(true)}>
           <Ionicons name="menu-outline" size={26} color={theme.colors.muted} />
         </Pressable>
       </View>
 
-      {/* Day strip: today (right) → oldest (left), RTL */}
+      {/* Day strip: today (right) → oldest (left) */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ flexDirection: 'row-reverse', paddingHorizontal: 16, gap: 8 }}
+        contentContainerStyle={{ flexDirection: 'row', paddingHorizontal: 16, gap: 8 }}
         style={{ maxHeight: 90 }}>
-        {dates.map((d) => {
+        {(I18nManager.isRTL ? dates : [...dates].reverse()).map((d) => {
           const active = d === selected;
           const lbl = dayLabel(d, today);
           const pct = datePercentages[d] ?? 0;
@@ -99,10 +99,10 @@ export default function DayScreen() {
 
       {/* Daily progress summary */}
       <View style={{ marginHorizontal: 16, marginTop: 16, marginBottom: 4 }}>
-        <View style={{ flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
+        <View style={{ flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
           <Text style={{ color: theme.colors.muted, fontFamily: theme.font, fontSize: 13 }}>{ar.summary.completed}</Text>
           <Text style={{ color: theme.colors.text, fontFamily: theme.font, fontSize: 15 }}>
-            {formattedScore} / {toArabicNumeral(totalTasks)} ({toArabicNumeral(todayPercentage)}%)
+            {`\u200E${formattedScore} / ${toArabicNumeral(totalTasks)} (${toArabicNumeral(todayPercentage)}%)`}
           </Text>
         </View>
         <View style={{ height: 6, borderRadius: 3, backgroundColor: theme.colors.notYet, overflow: 'hidden' }}>

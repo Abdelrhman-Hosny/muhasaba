@@ -1,16 +1,17 @@
 export const theme = {
   colors: {
-    bg: '#0f1a14',
-    surface: '#16241c',
-    surfaceDone: '#1c3a2a',
-    primary: '#2e8b57',
-    text: '#eaf2ec',
-    muted: '#9bb3a4',
-    onTime: '#2e8b57',
-    late: '#c9a227',
-    missed: '#b04a4a',
-    notYet: '#3a4a40',
+    bg: '#080d0a', // Deep slate jade-green
+    surface: '#111a15', // Sleek card background
+    surfaceDone: '#173528', // Elegant primary tint for completed items
+    primary: '#10b981', // Vibrant emerald green accent
+    text: '#f8fafc', // Crisp white text
+    muted: '#7ea18f', // Soft minty gray for subtitles/secondary text
+    onTime: '#10b981',
+    late: '#f59e0b',
+    missed: '#ef4444',
+    notYet: '#23322a', // Dark olive-gray for uncompleted progress/backgrounds
   },
   spacing: (n: number) => n * 8,
   font: 'Cairo',
 };
+

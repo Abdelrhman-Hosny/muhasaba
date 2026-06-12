@@ -84,7 +84,7 @@ export default function CountersScreen() {
               flexDirection: 'row-reverse',
               alignItems: 'center',
               gap: 4,
-              backgroundColor: 'rgba(0,0,0,0.03)',
+              backgroundColor: 'rgba(255,255,255,0.05)',
               paddingVertical: 6,
               paddingHorizontal: 10,
               borderRadius: 12,
@@ -144,7 +144,7 @@ export default function CountersScreen() {
                   </Text>
                   <View style={{ flexDirection: 'row-reverse', alignItems: 'center', gap: 6, marginTop: 4 }}>
                     <Text style={{ color: completed ? theme.colors.primary : theme.colors.muted, fontFamily: theme.font, fontSize: 14 }}>
-                      {hasTarget ? `${toArabicNumeral(target ?? 0)} / ${toArabicNumeral(count)}` : toArabicNumeral(count)}
+                      {`\u200E${toArabicNumeral(count)}${hasTarget ? ` / ${toArabicNumeral(target ?? 0)}` : ''}`}
                     </Text>
                   </View>
                 </View>
@@ -201,7 +201,7 @@ export default function CountersScreen() {
                     borderColor: theme.colors.primary,
                   }}
                 >
-                  <Text style={{ fontFamily: theme.font, fontSize: 18, color: theme.colors.primary, fontWeight: 'bold' }}>
+                  <Text style={{ fontFamily: theme.font, fontSize: 18, color: theme.colors.primary, fontWeight: 'bold', writingDirection: 'ltr' }}>
                     {mode === 'add' ? '+' : '-'}{toArabicNumeral(amount)}
                   </Text>
                 </Pressable>
@@ -227,7 +227,7 @@ export default function CountersScreen() {
                     borderColor: theme.colors.primary,
                   }}
                 >
-                  <Text style={{ fontFamily: theme.font, fontSize: 18, color: theme.colors.primary, fontWeight: 'bold' }}>
+                  <Text style={{ fontFamily: theme.font, fontSize: 18, color: theme.colors.primary, fontWeight: 'bold', writingDirection: 'ltr' }}>
                     {mode === 'add' ? '+' : '-'}{toArabicNumeral(amount)}
                   </Text>
                 </Pressable>
@@ -238,7 +238,7 @@ export default function CountersScreen() {
           {/* Custom entry & Mode / Reset */}
           <View style={{ flexDirection: 'row-reverse', alignItems: 'center', gap: 10 }}>
             {/* Custom Input */}
-            <View style={{ flex: 1.8, height: 48, flexDirection: 'row-reverse', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.03)', borderRadius: 12, paddingHorizontal: 12 }}>
+            <View style={{ flex: 1.8, height: 48, flexDirection: 'row-reverse', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 12, paddingHorizontal: 12 }}>
               <TextInput
                 testID="input-custom-count"
                 placeholder={ar.counters.custom}
@@ -272,7 +272,7 @@ export default function CountersScreen() {
             </View>
 
             {/* Mode Toggle Segmented */}
-            <View style={{ flex: 1.2, height: 48, flexDirection: 'row-reverse', backgroundColor: 'rgba(0,0,0,0.03)', borderRadius: 12, padding: 3 }}>
+            <View style={{ flex: 1.2, height: 48, flexDirection: 'row-reverse', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 12, padding: 3 }}>
               <Pressable
                 testID="btn-mode-add"
                 onPress={() => setMode('add')}
@@ -313,14 +313,14 @@ export default function CountersScreen() {
                 flex: 1,
                 height: 48,
                 borderRadius: 12,
-                backgroundColor: 'rgba(255, 0, 0, 0.05)',
+                backgroundColor: 'rgba(239, 68, 68, 0.08)',
                 borderWidth: 1,
-                borderColor: 'red',
+                borderColor: theme.colors.missed,
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
             >
-              <Text style={{ fontFamily: theme.font, fontSize: 16, color: 'red', fontWeight: 'bold' }}>
+              <Text style={{ fontFamily: theme.font, fontSize: 16, color: theme.colors.missed, fontWeight: 'bold' }}>
                 {ar.counters.reset}
               </Text>
             </Pressable>
@@ -378,7 +378,7 @@ export default function CountersScreen() {
               style={{
                 width: '100%',
                 height: 48,
-                backgroundColor: 'rgba(0,0,0,0.03)',
+                backgroundColor: 'rgba(255,255,255,0.05)',
                 borderRadius: 12,
                 paddingHorizontal: 16,
                 fontFamily: theme.font,
@@ -399,7 +399,7 @@ export default function CountersScreen() {
               style={{
                 width: '100%',
                 height: 48,
-                backgroundColor: 'rgba(0,0,0,0.03)',
+                backgroundColor: 'rgba(255,255,255,0.05)',
                 borderRadius: 12,
                 paddingHorizontal: 16,
                 fontFamily: theme.font,
@@ -419,7 +419,7 @@ export default function CountersScreen() {
                   flex: 1,
                   height: 48,
                   borderRadius: 12,
-                  backgroundColor: 'rgba(0,0,0,0.03)',
+                  backgroundColor: 'rgba(255,255,255,0.05)',
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}

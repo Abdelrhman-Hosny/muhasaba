@@ -70,7 +70,7 @@ describe('CountersScreen', () => {
 
     expect(getByText('استغفار')).toBeTruthy();
     expect(getByText('سبحان الله')).toBeTruthy();
-    expect(getByText('100 / 25')).toBeTruthy();
+    expect(getByText('\u200E25 / 100')).toBeTruthy();
   });
 
   it('taps keypad to increment active counter', () => {
