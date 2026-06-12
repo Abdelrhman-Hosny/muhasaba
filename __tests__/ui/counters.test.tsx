@@ -89,10 +89,22 @@ describe('CountersScreen', () => {
     const input = getByTestId('input-custom-count');
     fireEvent.changeText(input, '150');
 
-    // Click save
-    fireEvent.press(getByTestId('btn-custom-save'));
+    // Submit input
+    fireEvent(input, 'submitEditing');
 
     expect(incrementDhikrCount).toHaveBeenCalledWith(expect.any(String), 'd1', 150);
+  });
+
+  it('subtract mode subtracts count correctly', () => {
+    const { getByTestId } = render(<CountersScreen />);
+
+    // Select subtract mode
+    fireEvent.press(getByTestId('btn-mode-sub'));
+
+    // Click on '10' keypad button
+    fireEvent.press(getByTestId('btn-keypad-10'));
+
+    expect(incrementDhikrCount).toHaveBeenCalledWith(expect.any(String), 'd1', -10);
   });
 
   it('taps reset to reset counter to 0', () => {

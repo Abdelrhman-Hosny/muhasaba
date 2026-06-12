@@ -19,6 +19,7 @@ export default function CountersScreen() {
   const [customValue, setCustomValue] = useState<string>('');
   const [modalVisible, setModalVisible] = useState(false);
   const [drawerVisible, setDrawerVisible] = useState(false);
+  const [mode, setMode] = useState<'add' | 'sub'>('add');
   const [newName, setNewName] = useState('');
   const [newTarget, setNewTarget] = useState('');
 
@@ -34,13 +35,15 @@ export default function CountersScreen() {
 
   const handleIncrement = async (amount: number) => {
     if (!selectedId) return;
-    await incrementDhikrCount(today, selectedId, amount);
+    const finalAmount = mode === 'add' ? amount : -amount;
+    await incrementDhikrCount(today, selectedId, finalAmount);
   };
 
-  const handleCustomSave = async () => {
+  const handleCustomSubmit = async () => {
     const val = parseInt(customValue, 10);
     if (isNaN(val) || val <= 0 || !selectedId) return;
-    await incrementDhikrCount(today, selectedId, val);
+    const finalAmount = mode === 'add' ? val : -val;
+    await incrementDhikrCount(today, selectedId, finalAmount);
     setCustomValue('');
   };
 
@@ -184,13 +187,67 @@ export default function CountersScreen() {
             backgroundColor: theme.colors.surface,
           }}
         >
+          {/* Mode Selector */}
+          <View style={{ flexDirection: 'row-reverse', gap: 10, marginBottom: 12 }}>
+            <Pressable
+              testID="btn-mode-add"
+              onPress={() => setMode('add')}
+              style={{
+                flex: 1,
+                height: 40,
+                borderRadius: 10,
+                backgroundColor: mode === 'add' ? theme.colors.primary : 'rgba(0,0,0,0.03)',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderWidth: 1,
+                borderColor: mode === 'add' ? theme.colors.primary : 'rgba(0,0,0,0.08)',
+              }}
+            >
+              <Text
+                style={{
+                  fontFamily: theme.font,
+                  fontSize: 15,
+                  fontWeight: 'bold',
+                  color: mode === 'add' ? '#fff' : theme.colors.muted,
+                }}
+              >
+                {ar.counters.addMode}
+              </Text>
+            </Pressable>
+
+            <Pressable
+              testID="btn-mode-sub"
+              onPress={() => setMode('sub')}
+              style={{
+                flex: 1,
+                height: 40,
+                borderRadius: 10,
+                backgroundColor: mode === 'sub' ? theme.colors.primary : 'rgba(0,0,0,0.03)',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderWidth: 1,
+                borderColor: mode === 'sub' ? theme.colors.primary : 'rgba(0,0,0,0.08)',
+              }}
+            >
+              <Text
+                style={{
+                  fontFamily: theme.font,
+                  fontSize: 15,
+                  fontWeight: 'bold',
+                  color: mode === 'sub' ? '#fff' : theme.colors.muted,
+                }}
+              >
+                {ar.counters.subMode}
+              </Text>
+            </Pressable>
+          </View>
+
           {/* Keypad Grid */}
           <View style={{ flexDirection: 'row-reverse', gap: 10, marginBottom: 10 }}>
-            {['+1', '+5', '+10'].map((label, i) => {
-              const amount = [1, 5, 10][i];
+            {[1, 5, 10].map((amount) => {
               return (
                 <Pressable
-                  key={label}
+                  key={amount}
                   testID={`btn-keypad-${amount}`}
                   onPress={() => handleIncrement(amount)}
                   style={{
@@ -205,7 +262,7 @@ export default function CountersScreen() {
                   }}
                 >
                   <Text style={{ fontFamily: theme.font, fontSize: 18, color: theme.colors.primary, fontWeight: 'bold' }}>
-                    {toArabicNumeral(amount)}+
+                    {mode === 'add' ? '+' : '-'}{toArabicNumeral(amount)}
                   </Text>
                 </Pressable>
               );
@@ -213,11 +270,10 @@ export default function CountersScreen() {
           </View>
 
           <View style={{ flexDirection: 'row-reverse', gap: 10, marginBottom: 12 }}>
-            {['+25', '+50', '+100'].map((label, i) => {
-              const amount = [25, 50, 100][i];
+            {[25, 50, 100].map((amount) => {
               return (
                 <Pressable
-                  key={label}
+                  key={amount}
                   testID={`btn-keypad-${amount}`}
                   onPress={() => handleIncrement(amount)}
                   style={{
@@ -232,7 +288,7 @@ export default function CountersScreen() {
                   }}
                 >
                   <Text style={{ fontFamily: theme.font, fontSize: 18, color: theme.colors.primary, fontWeight: 'bold' }}>
-                    {toArabicNumeral(amount)}+
+                    {mode === 'add' ? '+' : '-'}{toArabicNumeral(amount)}
                   </Text>
                 </Pressable>
               );
@@ -249,28 +305,17 @@ export default function CountersScreen() {
                 keyboardType="numeric"
                 value={customValue}
                 onChangeText={setCustomValue}
+                onSubmitEditing={handleCustomSubmit}
+                returnKeyType="done"
                 style={{
                   flex: 1,
                   fontFamily: theme.font,
                   fontSize: 16,
                   color: theme.colors.text,
                   textAlign: 'right',
+                  height: '100%',
                 }}
               />
-              <Pressable
-                testID="btn-custom-save"
-                onPress={handleCustomSave}
-                style={{
-                  paddingVertical: 6,
-                  paddingHorizontal: 12,
-                  backgroundColor: theme.colors.primary,
-                  borderRadius: 8,
-                }}
-              >
-                <Text style={{ fontFamily: theme.font, color: '#fff', fontSize: 14 }}>
-                  {ar.counters.save}
-                </Text>
-              </Pressable>
             </View>
 
             {/* Reset */}

@@ -28,6 +28,8 @@ export const ar = {
     custom: 'مخصص',
     save: 'حفظ',
     reset: 'تصفير',
+    addMode: 'زيادة (+)',
+    subMode: 'نقصان (-)',
     noCounters: 'لا توجد أذكار مضافة حاليًا. اضغط على جديد للبدء.',
   },
 };
