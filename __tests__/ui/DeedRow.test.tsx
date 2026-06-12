@@ -31,7 +31,7 @@ describe('DeedRow', () => {
     expect(onChange).toHaveBeenCalledWith('done', null);
   });
 
-  it('allows incrementing measured deeds when expanded', () => {
+  it('allows sliding measured deeds when expanded', () => {
     const onChange = jest.fn();
     const deed: DeedRowType = {
       id: 'deed_quran',
@@ -68,16 +68,27 @@ describe('DeedRow', () => {
       <DeedRow deed={deed} log={log} onChange={onChange} />
     );
 
-    // Stepper controls should be hidden by default
-    expect(queryByTestId('btn-increment')).toBeNull();
+    // Slider track should be hidden by default
+    expect(queryByTestId('slider-track')).toBeNull();
 
     // Expand the row
     fireEvent.press(getByTestId('btn-expand'));
 
-    // Press increment button
-    const plusButton = getByTestId('btn-increment');
-    fireEvent.press(plusButton);
+    const track = getByTestId('slider-track');
+    expect(track).toBeTruthy();
 
-    expect(onChange).toHaveBeenCalledWith('not_yet', 6);
+    // Trigger onLayout to set track width
+    fireEvent(track, 'layout', {
+      nativeEvent: {
+        layout: { width: 100 }
+      }
+    });
+
+    // Simulate drag gesture at pageX = 80 (80% progress, target 10 * 0.8 = 8)
+    fireEvent(track, 'touchMove', {
+      nativeEvent: { pageX: 80 }
+    });
+
+    expect(onChange).toHaveBeenCalledWith('not_yet', 8);
   });
 });

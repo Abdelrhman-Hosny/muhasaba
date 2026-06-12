@@ -1,9 +1,100 @@
-import { useState } from 'react';
-import { View, Text, Pressable } from 'react-native';
+import { useRef, useState } from 'react';
+import { View, Text, Pressable, LayoutChangeEvent, GestureResponderEvent } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '@/ui/theme';
 import { toArabicNumeral } from '@/i18n/format';
 import { DeedRow as DeedRowType, DeedLogRow } from '@/db/schema';
+
+/**
+ * Custom gesture-based slider component using standard React Native touch properties.
+ */
+function CustomSlider({
+  value,
+  max,
+  onChange,
+}: {
+  value: number;
+  max: number;
+  onChange: (val: number) => void;
+}) {
+  const [width, setWidth] = useState(0);
+  const trackRef = useRef<View>(null);
+  const [leftOffset, setLeftOffset] = useState(0);
+
+  const handleTouch = (evt: GestureResponderEvent) => {
+    if (width === 0) return;
+    const touchX = evt.nativeEvent.pageX - leftOffset;
+    const pct = Math.max(0, Math.min(1, touchX / width));
+    const val = Math.round(pct * max);
+    onChange(val);
+  };
+
+  const onLayout = (event: LayoutChangeEvent) => {
+    setWidth(event.nativeEvent.layout.width);
+    trackRef.current?.measure((x, y, w, h, pageX) => {
+      setLeftOffset(pageX);
+    });
+  };
+
+  const progressPct = Math.min(100, (value / max) * 100);
+
+  return (
+    <View
+      testID="slider-track"
+      ref={trackRef}
+      onLayout={onLayout}
+      onTouchStart={handleTouch}
+      onTouchMove={handleTouch}
+      style={{
+        height: 40,
+        justifyContent: 'center',
+        width: '100%',
+      }}
+    >
+      {/* Slider Track Background */}
+      <View
+        style={{
+          height: 6,
+          borderRadius: 3,
+          backgroundColor: 'rgba(0,0,0,0.1)',
+          width: '100%',
+          position: 'relative',
+        }}
+      >
+        {/* Active Progress Fill */}
+        <View
+          style={{
+            height: '100%',
+            width: `${progressPct}%`,
+            backgroundColor: theme.colors.primary,
+            borderRadius: 3,
+          }}
+        />
+
+        {/* Sliding Thumb handle */}
+        <View
+          style={{
+            position: 'absolute',
+            left: `${progressPct}%`,
+            top: -7, // centers thumb vertically
+            marginLeft: -10, // offsets half thumb width
+            width: 20,
+            height: 20,
+            borderRadius: 10,
+            backgroundColor: '#fff',
+            borderWidth: 2,
+            borderColor: theme.colors.primary,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.2,
+            shadowRadius: 2,
+            elevation: 3,
+          }}
+        />
+      </View>
+    </View>
+  );
+}
 
 export function DeedRow({
   deed,
@@ -52,12 +143,6 @@ export function DeedRow({
   const currentValue = log?.value ?? 0;
   const progressPct = Math.min(100, (currentValue / target) * 100);
 
-  const handleIncrement = (amount: number) => {
-    const nextVal = Math.max(0, Math.min(target, currentValue + amount));
-    const nextStatus = nextVal >= target ? 'done' : 'not_yet';
-    onChange(nextStatus, nextVal);
-  };
-
   return (
     <View
       style={{
@@ -99,63 +184,23 @@ export function DeedRow({
         <View style={{ height: '100%', width: `${progressPct}%`, backgroundColor: theme.colors.primary }} />
       </View>
 
-      {/* Stepper increment/decrement buttons visible when expanded */}
+      {/* Gesture slider visible when expanded */}
       {expanded && (
         <View
           style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'center',
             paddingVertical: 12,
-            paddingHorizontal: 16,
-            gap: 20,
+            paddingHorizontal: 20,
             backgroundColor: 'rgba(0,0,0,0.02)',
           }}
         >
-          {/* Decrement Button */}
-          <Pressable
-            testID="btn-decrement"
-            onPress={() => handleIncrement(-1)}
-            disabled={currentValue === 0}
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 18,
-              backgroundColor: theme.colors.surface,
-              alignItems: 'center',
-              justifyContent: 'center',
-              borderWidth: 1,
-              borderColor: 'rgba(0,0,0,0.1)',
-              opacity: currentValue === 0 ? 0.5 : 1,
+          <CustomSlider
+            value={currentValue}
+            max={target}
+            onChange={(val) => {
+              const nextStatus = val >= target ? 'done' : 'not_yet';
+              onChange(nextStatus, val);
             }}
-          >
-            <Ionicons name="remove" size={20} color={theme.colors.text} />
-          </Pressable>
-
-          {/* Current Count Stepper Value */}
-          <Text style={{ fontFamily: theme.font, fontSize: 18, color: theme.colors.text, minWidth: 60, textAlign: 'center' }}>
-            {toArabicNumeral(currentValue)}
-          </Text>
-
-          {/* Increment Button */}
-          <Pressable
-            testID="btn-increment"
-            onPress={() => handleIncrement(1)}
-            disabled={currentValue === target}
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 18,
-              backgroundColor: theme.colors.surface,
-              alignItems: 'center',
-              justifyContent: 'center',
-              borderWidth: 1,
-              borderColor: 'rgba(0,0,0,0.1)',
-              opacity: currentValue === target ? 0.5 : 1,
-            }}
-          >
-            <Ionicons name="add" size={20} color={theme.colors.text} />
-          </Pressable>
+          />
         </View>
       )}
     </View>
