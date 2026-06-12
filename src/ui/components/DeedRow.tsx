@@ -177,7 +177,7 @@ export function DeedRow({
             {deed.name}
           </Text>
           <Text style={{ color: theme.colors.muted, fontFamily: theme.font, fontSize: 18 }}>
-            ({toArabicNumeral(currentValue)}/{toArabicNumeral(target)})
+            ({toArabicNumeral(target)}/{toArabicNumeral(currentValue)})
           </Text>
         </View>
         <Pressable
