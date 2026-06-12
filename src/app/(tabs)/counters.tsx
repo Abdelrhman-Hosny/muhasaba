@@ -187,61 +187,6 @@ export default function CountersScreen() {
             backgroundColor: theme.colors.surface,
           }}
         >
-          {/* Mode Selector */}
-          <View style={{ flexDirection: 'row-reverse', gap: 10, marginBottom: 12 }}>
-            <Pressable
-              testID="btn-mode-add"
-              onPress={() => setMode('add')}
-              style={{
-                flex: 1,
-                height: 40,
-                borderRadius: 10,
-                backgroundColor: mode === 'add' ? theme.colors.primary : 'rgba(0,0,0,0.03)',
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderWidth: 1,
-                borderColor: mode === 'add' ? theme.colors.primary : 'rgba(0,0,0,0.08)',
-              }}
-            >
-              <Text
-                style={{
-                  fontFamily: theme.font,
-                  fontSize: 15,
-                  fontWeight: 'bold',
-                  color: mode === 'add' ? '#fff' : theme.colors.muted,
-                }}
-              >
-                {ar.counters.addMode}
-              </Text>
-            </Pressable>
-
-            <Pressable
-              testID="btn-mode-sub"
-              onPress={() => setMode('sub')}
-              style={{
-                flex: 1,
-                height: 40,
-                borderRadius: 10,
-                backgroundColor: mode === 'sub' ? theme.colors.primary : 'rgba(0,0,0,0.03)',
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderWidth: 1,
-                borderColor: mode === 'sub' ? theme.colors.primary : 'rgba(0,0,0,0.08)',
-              }}
-            >
-              <Text
-                style={{
-                  fontFamily: theme.font,
-                  fontSize: 15,
-                  fontWeight: 'bold',
-                  color: mode === 'sub' ? '#fff' : theme.colors.muted,
-                }}
-              >
-                {ar.counters.subMode}
-              </Text>
-            </Pressable>
-          </View>
-
           {/* Keypad Grid */}
           <View style={{ flexDirection: 'row-reverse', gap: 10, marginBottom: 10 }}>
             {[1, 5, 10].map((amount) => {
@@ -295,10 +240,10 @@ export default function CountersScreen() {
             })}
           </View>
 
-          {/* Custom entry & Reset */}
+          {/* Custom entry & Mode / Reset */}
           <View style={{ flexDirection: 'row-reverse', alignItems: 'center', gap: 10 }}>
             {/* Custom Input */}
-            <View style={{ flex: 2, height: 48, flexDirection: 'row-reverse', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.03)', borderRadius: 12, paddingHorizontal: 12 }}>
+            <View style={{ flex: 1.8, height: 48, flexDirection: 'row-reverse', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.03)', borderRadius: 12, paddingHorizontal: 12 }}>
               <TextInput
                 testID="input-custom-count"
                 placeholder={ar.counters.custom}
@@ -316,6 +261,40 @@ export default function CountersScreen() {
                   height: '100%',
                 }}
               />
+            </View>
+
+            {/* Mode Toggle Segmented */}
+            <View style={{ flex: 1.2, height: 48, flexDirection: 'row-reverse', backgroundColor: 'rgba(0,0,0,0.03)', borderRadius: 12, padding: 3 }}>
+              <Pressable
+                testID="btn-mode-add"
+                onPress={() => setMode('add')}
+                style={{
+                  flex: 1,
+                  borderRadius: 9,
+                  backgroundColor: mode === 'add' ? theme.colors.primary : 'transparent',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Text style={{ fontFamily: theme.font, fontSize: 16, fontWeight: 'bold', color: mode === 'add' ? '#fff' : theme.colors.muted }}>
+                  +
+                </Text>
+              </Pressable>
+              <Pressable
+                testID="btn-mode-sub"
+                onPress={() => setMode('sub')}
+                style={{
+                  flex: 1,
+                  borderRadius: 9,
+                  backgroundColor: mode === 'sub' ? theme.colors.primary : 'transparent',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Text style={{ fontFamily: theme.font, fontSize: 16, fontWeight: 'bold', color: mode === 'sub' ? '#fff' : theme.colors.muted }}>
+                  -
+                </Text>
+              </Pressable>
             </View>
 
             {/* Reset */}
