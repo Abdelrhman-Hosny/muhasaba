@@ -168,7 +168,7 @@ export function DeedRow({
           <Text style={{ color: done ? theme.colors.text : theme.colors.muted, fontFamily: theme.font, fontSize: 18 }}>
             {deed.name}
           </Text>
-          <Text style={{ color: theme.colors.muted, fontFamily: theme.font, fontSize: 14 }}>
+          <Text style={{ color: theme.colors.muted, fontFamily: theme.font, fontSize: 18 }}>
             ({toArabicNumeral(currentValue)}/{toArabicNumeral(target)})
           </Text>
         </View>
