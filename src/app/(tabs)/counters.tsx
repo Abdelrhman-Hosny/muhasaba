@@ -144,8 +144,7 @@ export default function CountersScreen() {
                   </Text>
                   <View style={{ flexDirection: 'row-reverse', alignItems: 'center', gap: 6, marginTop: 4 }}>
                     <Text style={{ color: completed ? theme.colors.primary : theme.colors.muted, fontFamily: theme.font, fontSize: 14 }}>
-                      {toArabicNumeral(count)}
-                      {hasTarget && ` / ${toArabicNumeral(target ?? 0)}`}
+                      {hasTarget ? `${toArabicNumeral(target ?? 0)} / ${toArabicNumeral(count)}` : toArabicNumeral(count)}
                     </Text>
                   </View>
                 </View>
