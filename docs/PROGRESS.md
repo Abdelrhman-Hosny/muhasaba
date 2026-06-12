@@ -125,6 +125,21 @@ Based on [UX spec](superpowers/specs/2026-06-11-ux-discussion-summary.md) and [A
 | Modified | `src/i18n/ar.ts` |
 | Modified | `src/state/deedStore.ts` |
 
+## ✅ RTL UI Alignments, Score Swapping & Premium Theme (2026-06-12)
+
+### RTL & Layout Alignments
+- [x] Swapped display order of value/target labels using Unicode Left-to-Right Mark (`\u200E`) to ensure LTR format regardless of system-wide RTL text-mirroring (resolving `target / value` swap to `value / target`).
+- [x] Fixed horizontal date timeline strip on the scoreboard page to keep today ("اليوم") on the right-most side of the screen.
+- [x] Removed redundant score display next to the hamburger menu.
+
+### Theme & Aesthetics
+- [x] Implemented a premium dark-emerald palette (`#080d0a` deep jade-slate bg, `#111a15` card surfaces, `#10b981` emerald accent, `#7ea18f` minty-gray).
+- [x] Replaced all button chips, custom inputs, and keypads with transparent jade-tinted surfaces (`rgba(255,255,255,0.05)` and `rgba(239, 68, 68, 0.08)`) instead of bright white elements or muddy gray overlays.
+
+### Housekeeping & Tests
+- [x] Updated Jest assertions to match LRM formatted values in `__tests__/ui/counters.test.tsx`.
+- [x] Verified all 29 tests pass and TypeScript compiler reports zero errors.
+
 ---
 
 ## 🔲 Remaining Work (by priority)
