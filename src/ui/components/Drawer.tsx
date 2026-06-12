@@ -12,7 +12,7 @@ interface DrawerProps {
 
 const { width } = Dimensions.get('window');
 const DRAWER_WIDTH = width * 0.75;
-const OFFSCREEN_TRANSLATE = I18nManager.isRTL ? -DRAWER_WIDTH : DRAWER_WIDTH;
+const OFFSCREEN_TRANSLATE = I18nManager.isRTL ? DRAWER_WIDTH : -DRAWER_WIDTH;
 
 export function Drawer({ visible, onClose }: DrawerProps) {
   const router = useRouter();
