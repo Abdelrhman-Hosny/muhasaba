@@ -179,10 +179,12 @@ export function DeedRow({
         />
       </Pressable>
 
-      {/* Embedded Progress bar always visible at the bottom of the card */}
-      <View style={{ height: 3, backgroundColor: 'rgba(0,0,0,0.05)', width: '100%' }}>
-        <View style={{ height: '100%', width: `${progressPct}%`, backgroundColor: theme.colors.primary }} />
-      </View>
+      {/* Embedded Progress bar only visible when collapsed */}
+      {!expanded && (
+        <View style={{ height: 3, backgroundColor: 'rgba(0,0,0,0.05)', width: '100%' }}>
+          <View style={{ height: '100%', width: `${progressPct}%`, backgroundColor: theme.colors.primary }} />
+        </View>
+      )}
 
       {/* Gesture slider visible when expanded */}
       {expanded && (
