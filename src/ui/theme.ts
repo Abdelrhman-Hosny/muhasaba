@@ -13,5 +13,6 @@ export const theme = {
   },
   spacing: (n: number) => n * 8,
   font: 'Cairo',
+  fontBold: 'Cairo-Bold',
 };
 

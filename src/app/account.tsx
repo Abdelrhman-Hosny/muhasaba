@@ -1,4 +1,4 @@
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable, StyleSheet, I18nManager } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -55,7 +55,7 @@ export default function AccountScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.colors.bg },
   header: {
-    flexDirection: 'row-reverse',
+    flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 16,
@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
   // Signed Out
   signedOutState: { alignItems: 'center', gap: 16 },
   googleBtn: {
-    flexDirection: 'row-reverse',
+    flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse',
     alignItems: 'center',
     backgroundColor: '#4285F4',
     paddingVertical: 14,
@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
   signedInState: { alignItems: 'center', gap: 12 },
   greeting: { color: theme.colors.text, fontFamily: theme.font, fontSize: 24 },
   email: { color: theme.colors.muted, fontFamily: theme.font, fontSize: 16 },
-  syncStatusRow: { flexDirection: 'row-reverse', alignItems: 'center', gap: 8, marginTop: 8, marginBottom: 24 },
+  syncStatusRow: { flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse', alignItems: 'center', gap: 8, marginTop: 8, marginBottom: 24 },
   statusDot: { width: 8, height: 8, borderRadius: 4 },
   syncStatus: { color: theme.colors.muted, fontFamily: theme.font, fontSize: 14 },
   signOutBtn: {

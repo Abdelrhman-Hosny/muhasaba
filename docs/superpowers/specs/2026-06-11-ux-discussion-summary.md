@@ -97,7 +97,7 @@ Three schedule types:
 ## Future Phase: Mentorship (Sheikh & Students)
 
 While the initial focus is on individual self-accountability, a future phase will introduce mentorship capabilities:
-- **Role Structure:** A user can act as a "Sheikh" managing multiple "groups". Each "Student" belongs to a single group (1 Sheikh per student).
-- **Abilities:** The Sheikh will be able to view their students' scorecards and progress.
-- **Bulk Actions:** The Sheikh can bulk-add or modify deeds for an entire group at once.
+- **Role & Group Structure:** A "group" is a collection of "sheikhs" and "students". A single group can have multiple sheikhs (teachers/mentors) managing a collection of students. A user can belong to multiple groups and can have different roles in different groups.
+- **Abilities:** Any sheikh in a group will be able to view the scorecards and progress of all students in that same group.
+- **Bulk Actions:** Any sheikh in a group can bulk-add or modify deeds for the entire group (propagating to all students in the group) at once.
 - *Details on the UX and permissions for this mode will be explored in a later design phase.*

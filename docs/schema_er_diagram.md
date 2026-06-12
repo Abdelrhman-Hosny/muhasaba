@@ -13,12 +13,33 @@ erDiagram
     DHIKRS ||--o{ DHIKR-LOGS : "logs free-tally"
     DHIKRS ||--o{ DEEDS : "optionally links to target"
 
+    GROUPS ||--o{ GROUP-MEMBERS : "has members"
+    GROUPS ||--o{ DEEDS : "owns (for group deeds)"
+
     DEED-DEFINITIONS {
         text id PK
         text name "e.g., الفجر"
         text type "boolean | measured"
         text default_schedule "daily | weekdays | etc."
         text payload "JSON string of additional info"
+    }
+
+    GROUPS {
+        text id PK
+        text name "Group Name"
+        int created_at "Epoch MS"
+        int updated_at "Epoch MS"
+        boolean deleted
+    }
+
+    GROUP-MEMBERS {
+        text id PK
+        text group_id FK
+        text user_id FK
+        text role "sheikh | student"
+        int joined_at "Epoch MS"
+        int updated_at "Epoch MS"
+        boolean deleted
     }
 
     SECTIONS {
@@ -46,6 +67,7 @@ erDiagram
     DEEDS {
         text id PK
         text user_id FK
+        text group_id FK "Nullable (null for personal deeds)"
         text definition_id FK "Nullable"
         text section_id FK
         text name "Custom name or override"
@@ -88,63 +110,64 @@ erDiagram
 ## 2. ASCII ER Diagram
 
 ```text
-    +-------------------+
-    | deed_definitions  |
-    +-------------------+
-    | id (PK, text)     |
-    | name (text)       |
-    | type (text)       |
-    | default_schedule  |
-    | payload (text)    |
-    +-------------------+
-             |
-             | 1
-             |
-             | 0..*
-             v
-    +-------------------+             +------------------+
-    |       deeds       |------------>|     sections     |
-    +-------------------+ 0..*      1 +------------------+
-    | id (PK, text)     |             | id (PK, text)    |
-    | user_id (text)    |             | user_id (text)   |
-    | definition_id (FK)|             | name (text)      |
-    | section_id (FK)   |             | sort_order (int) |
-    | name (text)       |             | deleted_at (txt) |
-    | type (text)       |             | updated_at (int) |
-    | schedule (text)   |             | deleted (bool)   |
-    | created_at (text) |             | dirty (bool)     |
-    | sort_order (int)  |             +------------------+
-    | deleted_at (text) |
-    | linked_dhikr_id   |-------\     +------------------+
-    | target (int)      |       |     |     dhikrs       |
-    | updated_at (int)  |       |     +------------------+
-    | deleted (bool)    |       |     | id (PK, text)    |
-    | dirty (bool)      |       |     | user_id (text)   |
-    +-------------------+       |     | name (text)      |
-             |                  |     | sort_order (int) |
-             | 1                |     | target (int)     |
-             |                  |     | created_at (txt) |
-             | 0..*             |     | deleted_at (txt) |
-             v                  v 1   | updated_at (int) |
-    +-------------------+   +-------+ | deleted (bool)   |
-    |     deed_logs     |   |       | +------------------+
-    +-------------------+   |       |          |
-    | id (PK, text)     |   |       |          | 1
-    | user_id (text)    |   | (ref) |          |
-    | deed_id (FK)      |   |       |          | 0..*
-    | date (text)       |   +-------+          v
-    | status (text)     |             +-------------------+
-    | value (int)       |             |    dhikr_logs     |
-    | note (text)       |             +-------------------+
-    | updated_at (int)  |             | id (PK, text)     |
-    | deleted (bool)    |             | user_id (text)    |
-    | dirty (bool)      |             | dhikr_id (FK)     |
-    +-------------------+             | date (text)       |
-                                      | count (int)       |
-                                      | updated_at (int)  |
-                                      | deleted (bool)    |
-                                      | dirty (bool)      |
-                                      +-------------------+
+    +-------------------+             +-------------------+
+    |      groups       |             | deed_definitions  |
+    +-------------------+             +-------------------+
+    | id (PK, text)     |             | id (PK, text)     |
+    | name (text)       |             | name (text)       |
+    | created_at (int)  |             | type (text)       |
+    | updated_at (int)  |             | default_schedule  |
+    | deleted (bool)    |             | payload (text)    |
+    +-------------------+             +-------------------+
+      |               |                         |
+      | 1             | 1                       | 1
+      |               |                         |
+      | 0..*          | 0..* (opt)              | 0..*
+      v               v                         v
++-----------+   +-------------------+     +------------------+
+|   group_  |   |       deeds       |---->|     sections     |
+|  members  |   +-------------------+ 0..*| +------------------+
++-----------+   | id (PK, text)     |   1 | | id (PK, text)    |
+| id (PK)   |   | user_id (text)    |     | | user_id (text)   |
+| group_id  |   | group_id (FK, opt)|     | | name (text)      |
+| user_id   |   | definition_id (FK)|     | | sort_order (int) |
+| role      |   | section_id (FK)   |     | | deleted_at (txt) |
+| joined_at |   | name (text)       |     | | updated_at (int) |
+| updated_at|   | type (text)       |     | | deleted (bool)   |
+| deleted   |   | schedule (text)   |     | | dirty (bool)     |
++-----------+   | created_at (text) |     +------------------+
+                | sort_order (int)  |
+                | deleted_at (text) |
+                | linked_dhikr_id   |---\     +------------------+
+                | target (int)      |   |     |     dhikrs       |
+                | updated_at (int)  |   |     +------------------+
+                | deleted (bool)    |   |     | id (PK, text)    |
+                | dirty (bool)      |   |     | user_id (text)   |
+                +-------------------+   |     | name (text)      |
+                         |              |     | sort_order (int) |
+                         | 1            |     | target (int)     |
+                         |              |     | created_at (txt) |
+                         | 0..*         |     | deleted_at (txt) |
+                         v              v 1   | updated_at (int) |
+                +-------------------+ +-----+ | deleted (bool)   |
+                |     deed_logs     | |     | +------------------+
+                +-------------------+ |     |          |
+                | id (PK, text)     | |(ref)|          | 1
+                | user_id (text)    | |     |          |
+                | deed_id (FK)      | +-----+          | 0..*
+                | date (text)       |                  v
+                | status (text)     |         +-------------------+
+                | value (int)       |         |    dhikr_logs     |
+                | note (text)       |         +-------------------+
+                | updated_at (int)  |         | id (PK, text)     |
+                | deleted (bool)    |         | user_id (text)    |
+                | dirty (bool)      |         | dhikr_id (FK)     |
+                +-------------------+         | date (text)       |
+                                              | count (int)       |
+                                              | updated_at (int)  |
+                                              | deleted (bool)    |
+                                              | dirty (bool)      |
+                                              +-------------------+
 ```
 
 ---
@@ -156,3 +179,19 @@ When the user increments their tally for a specific Dhikr in the **الأذكا�
 2. We query the `deeds` table for any active deeds where `linked_dhikr_id = 'istighfar_id'` and `target` is defined (e.g. `target = 100`).
 3. For each matching deed, we check if `dhikr_log.count >= deed.target` (e.g., $150 \ge 100$).
 4. If yes, we automatically update the `deed_logs` entry for that `deed_id` on that date to `status = 'done'` (and write/mark it as `dirty` for synchronization).
+
+---
+
+## 4. Mentorship & Group-Deeds Propagation
+
+Because the app is **local-first** and **highly customizable**, we handle group deeds created by a Sheikh via cloning/propagation rather than a shared query:
+
+1. **Sheikh Role Actions:** 
+   When a Sheikh adds or edits a deed for a group, a new row is created in `deeds` with `group_id = 'group_id'` and `user_id = null` (representing the group master deed template).
+2. **Student Sync & Cloning:** 
+   * When students in the group sync their local DB with the Supabase remote DB, they pull new master deeds matching their `group_members.group_id`.
+   * For each master deed, a student-specific clone is instantiated locally in the `deeds` table with `user_id = 'student_user_id'` and `group_id = 'group_id'`.
+   * This allows the student to keep a fully local copy where they can custom-override parameters or schedules if needed.
+3. **Sheikh Progress Monitoring:**
+   * A Sheikh can read all `deed_logs` and `deeds` where `deeds.group_id = 'group_id'` via Row-Level Security (RLS) rules in Supabase.
+   * This permits sheikhs in that group to construct a real-time progress dashboard of all students within their group.

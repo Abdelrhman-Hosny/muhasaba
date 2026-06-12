@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, Text, Pressable, ScrollView, TextInput, Modal } from 'react-native';
+import { View, Text, Pressable, ScrollView, TextInput, Modal, I18nManager } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { theme } from '@/ui/theme';
 import { ar } from '@/i18n/ar';
@@ -248,11 +248,11 @@ export default function CountersScreen() {
                 onSubmitEditing={handleCustomSubmit}
                 returnKeyType="done"
                 style={{
-                  flex: 1,
                   fontFamily: theme.font,
+                  flex: 1,
                   fontSize: 16,
                   color: theme.colors.text,
-                  textAlign: 'right',
+                  textAlign: I18nManager.isRTL ? 'right' : 'left',
                   height: '100%',
                 }}
               />
@@ -376,14 +376,14 @@ export default function CountersScreen() {
               value={newName}
               onChangeText={setNewName}
               style={{
+                fontFamily: theme.font,
                 width: '100%',
                 height: 48,
                 backgroundColor: 'rgba(255,255,255,0.05)',
                 borderRadius: 12,
                 paddingHorizontal: 16,
-                fontFamily: theme.font,
                 fontSize: 16,
-                textAlign: 'right',
+                textAlign: I18nManager.isRTL ? 'right' : 'left',
                 color: theme.colors.text,
                 marginBottom: 12,
               }}
@@ -397,38 +397,21 @@ export default function CountersScreen() {
               value={newTarget}
               onChangeText={(text) => setNewTarget(text.replace(/[^0-9]/g, ''))}
               style={{
+                fontFamily: theme.font,
                 width: '100%',
                 height: 48,
                 backgroundColor: 'rgba(255,255,255,0.05)',
                 borderRadius: 12,
                 paddingHorizontal: 16,
-                fontFamily: theme.font,
                 fontSize: 16,
-                textAlign: 'right',
+                textAlign: I18nManager.isRTL ? 'right' : 'left',
                 color: theme.colors.text,
                 marginBottom: 24,
               }}
             />
 
             {/* Modal Actions */}
-            <View style={{ flexDirection: 'row', gap: 12 }}>
-              <Pressable
-                testID="btn-modal-cancel"
-                onPress={() => setModalVisible(false)}
-                style={{
-                  flex: 1,
-                  height: 48,
-                  borderRadius: 12,
-                  backgroundColor: 'rgba(255,255,255,0.05)',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <Text style={{ fontFamily: theme.font, fontSize: 16, color: theme.colors.muted }}>
-                  {ar.counters.cancel}
-                </Text>
-              </Pressable>
-
+            <View style={{ flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse', gap: 12 }}>
               <Pressable
                 testID="btn-modal-add"
                 onPress={handleAddCounter}
@@ -443,6 +426,23 @@ export default function CountersScreen() {
               >
                 <Text style={{ fontFamily: theme.font, fontSize: 16, color: '#fff', fontWeight: 'bold' }}>
                   {ar.counters.add}
+                </Text>
+              </Pressable>
+
+              <Pressable
+                testID="btn-modal-cancel"
+                onPress={() => setModalVisible(false)}
+                style={{
+                  flex: 1,
+                  height: 48,
+                  borderRadius: 12,
+                  backgroundColor: 'rgba(255,255,255,0.05)',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Text style={{ fontFamily: theme.font, fontSize: 16, color: theme.colors.muted }}>
+                  {ar.counters.cancel}
                 </Text>
               </Pressable>
             </View>

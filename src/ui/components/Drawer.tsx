@@ -12,7 +12,7 @@ interface DrawerProps {
 
 const { width } = Dimensions.get('window');
 const DRAWER_WIDTH = width * 0.75;
-const OFFSCREEN_TRANSLATE = I18nManager.isRTL ? DRAWER_WIDTH : -DRAWER_WIDTH;
+const OFFSCREEN_TRANSLATE = DRAWER_WIDTH;
 
 export function Drawer({ visible, onClose }: DrawerProps) {
   const router = useRouter();
@@ -49,7 +49,13 @@ export function Drawer({ visible, onClose }: DrawerProps) {
             <Pressable style={styles.menuItem} onPress={() => {}}>
               <Text style={styles.menuItemText}>{ar.drawer.stats}</Text>
             </Pressable>
-            <Pressable style={styles.menuItem} onPress={() => {}}>
+            <Pressable
+              style={styles.menuItem}
+              onPress={() => {
+                onClose();
+                setTimeout(() => router.push('/settings'), 100);
+              }}
+            >
               <Text style={styles.menuItemText}>{ar.drawer.settings}</Text>
             </Pressable>
             <Pressable
@@ -74,7 +80,7 @@ export function Drawer({ visible, onClose }: DrawerProps) {
 }
 
 const styles = StyleSheet.create({
-  overlay: { flex: 1, flexDirection: 'row' },
+  overlay: { flex: 1, flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse' },
   scrim: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(0,0,0,0.5)' },
   drawer: {
     width: DRAWER_WIDTH,
@@ -83,7 +89,7 @@ const styles = StyleSheet.create({
     paddingTop: 50,
     paddingHorizontal: 24,
   },
-  header: { flexDirection: 'row-reverse', marginBottom: 32 },
+  header: { flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse', marginBottom: 32 },
   menu: { flex: 1, gap: 24 },
   menuItem: { paddingVertical: 8 },
   menuItemText: { color: theme.colors.text, fontFamily: theme.font, fontSize: 18, textAlign: 'right' },

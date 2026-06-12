@@ -2,9 +2,11 @@ import { and, eq, inArray, lte, or, isNull, gt, sql } from 'drizzle-orm';
 import { useMemo } from 'react';
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
 import { db } from '@/db/client';
-import { deeds, deedLogs, sections, dhikrs, dhikrLogs, SectionRow, DeedRow, DeedLogRow, DhikrRow, DhikrLogRow } from '@/db/schema';
+import { deeds, deedLogs, sections, dhikrs, dhikrLogs, deedDefinitions, SectionRow, DeedRow, DeedLogRow, DhikrRow, DhikrLogRow, DeedDefinitionRow } from '@/db/schema';
 import { user$ } from '@/state/auth';
 import { scheduleSync } from '@/state/sync';
+import { todayKey, weekdayIndex } from '@/domain/dates';
+import * as Crypto from 'expo-crypto';
 
 export const localLogId = (date: string, refId: string) => `${date}:${refId}`;
 
@@ -158,6 +160,21 @@ export interface ScorecardSection {
 }
 
 /**
+ * Helper to determine if a deed should be tracked on a specific YYYY-MM-DD date.
+ */
+export function isDeedActiveOnDay(schedule: string, date: string): boolean {
+  if (!schedule || schedule === 'daily') return true;
+  if (schedule === 'weekly_anytime') return true;
+  if (schedule === 'weekdays') {
+    const day = weekdayIndex(date);
+    return day >= 1 && day <= 5; // Monday to Friday
+  }
+  const activeDays = schedule.split(',');
+  const day = weekdayIndex(date).toString();
+  return activeDays.includes(day);
+}
+
+/**
  * Reactive: returns the user's scorecard grouped by sections for a specific date,
  * filtering out deeds not yet created or already deleted on this date.
  */
@@ -207,6 +224,9 @@ export function useScorecard(date: string): ScorecardSection[] {
     // Map deeds by sectionId
     const deedMap = new Map<string, ScorecardItem[]>();
     for (const deed of rawDeeds) {
+      if (!isDeedActiveOnDay(deed.schedule, date)) {
+        continue;
+      }
       const log = logMap.get(deed.id) ?? null;
       if (!deedMap.has(deed.sectionId)) {
         deedMap.set(deed.sectionId, []);
@@ -314,7 +334,8 @@ export function useDatesPercentages(dates: string[]): Record<string, number> {
       const activeDeeds = rawDeeds.filter((deed) => {
         const createdOk = deed.createdAt <= d;
         const notDeletedYet = !deed.deletedAt || deed.deletedAt > d;
-        return createdOk && notDeletedYet;
+        const activeToday = isDeedActiveOnDay(deed.schedule, d);
+        return createdOk && notDeletedYet && activeToday;
       });
 
       if (activeDeeds.length === 0) {
@@ -349,8 +370,6 @@ export function useDatesPercentages(dates: string[]): Record<string, number> {
 /**
  * Creates a new custom Dhikr counter locally, marked as dirty.
  */
-import * as Crypto from 'expo-crypto';
-import { todayKey } from '@/domain/dates';
 
 export async function addDhikrCounter(name: string, targetVal: number | null = null): Promise<void> {
   const now = Date.now();
@@ -380,8 +399,24 @@ export async function addDhikrCounter(name: string, targetVal: number | null = n
 }
 
 /**
- * Soft-deletes a Dhikr counter locally, marked as dirty for syncing.
+ * Updates an existing Dhikr counter locally, marked as dirty.
  */
+export async function updateDhikrCounter(id: string, name: string, targetVal: number | null): Promise<void> {
+  const now = Date.now();
+
+  await db
+    .update(dhikrs)
+    .set({
+      name,
+      target: targetVal,
+      updatedAt: now,
+      dirty: true,
+    })
+    .where(eq(dhikrs.id, id));
+
+  scheduleSync();
+}
+
 export async function deleteDhikrCounter(id: string): Promise<void> {
   const now = Date.now();
   const today = todayKey();
@@ -409,3 +444,171 @@ export async function deleteDhikrCounter(id: string): Promise<void> {
 
   scheduleSync();
 }
+
+/**
+ * Creates a new custom deed locally, marked as dirty.
+ */
+export async function addDeed(
+  name: string,
+  sectionId: string,
+  type: 'boolean' | 'measured',
+  schedule: string,
+  target: number | null = null,
+  linkedDhikrId: string | null = null,
+  definitionId: string | null = null
+): Promise<void> {
+  const now = Date.now();
+  const userId = user$.get()?.id ?? null;
+  const today = todayKey();
+
+  // Get next sort order for this section
+  const existing = await db
+    .select({ count: sql`count(*)` })
+    .from(deeds)
+    .where(and(eq(deeds.sectionId, sectionId), eq(deeds.deleted, false)));
+  const nextSort = (existing[0] as any)?.count ?? 0;
+
+  await db.insert(deeds).values({
+    id: Crypto.randomUUID(),
+    userId,
+    definitionId,
+    sectionId,
+    name,
+    type,
+    schedule,
+    createdAt: today,
+    sortOrder: nextSort,
+    linkedDhikrId,
+    target,
+    updatedAt: now,
+    deleted: false,
+    dirty: true,
+  });
+
+  scheduleSync();
+}
+
+/**
+ * Updates an existing deed locally, marked as dirty.
+ */
+export async function updateDeed(
+  id: string,
+  fields: {
+    name?: string;
+    sectionId?: string;
+    type?: 'boolean' | 'measured';
+    schedule?: string;
+    target?: number | null;
+    linkedDhikrId?: string | null;
+    definitionId?: string | null;
+  }
+): Promise<void> {
+  const now = Date.now();
+
+  await db
+    .update(deeds)
+    .set({
+      ...fields,
+      updatedAt: now,
+      dirty: true,
+    })
+    .where(eq(deeds.id, id));
+
+  scheduleSync();
+}
+
+/**
+ * Soft-deletes a deed locally, marked as dirty.
+ */
+export async function deleteDeed(id: string): Promise<void> {
+  const now = Date.now();
+  const today = todayKey();
+
+  await db
+    .update(deeds)
+    .set({
+      deleted: true,
+      deletedAt: today,
+      updatedAt: now,
+      dirty: true,
+    })
+    .where(eq(deeds.id, id));
+
+  scheduleSync();
+}
+
+/**
+ * Reactive: Returns all active sections in the database.
+ */
+export function useSections(): SectionRow[] {
+  const { data } = useLiveQuery(
+    db
+      .select()
+      .from(sections)
+      .where(eq(sections.deleted, false))
+  );
+
+  return useMemo(() => {
+    if (!data) return [];
+    return [...data].sort((a, b) => a.sortOrder - b.sortOrder);
+  }, [data]);
+}
+
+export interface ScorecardStructureSection {
+  section: SectionRow;
+  deeds: DeedRow[];
+}
+
+/**
+ * Reactive: Returns all active sections grouped with their active deeds.
+ */
+export function useScorecardStructure(): ScorecardStructureSection[] {
+  const { data: rawSections } = useLiveQuery(
+    db
+      .select()
+      .from(sections)
+      .where(eq(sections.deleted, false))
+  );
+
+  const { data: rawDeeds } = useLiveQuery(
+    db
+      .select()
+      .from(deeds)
+      .where(eq(deeds.deleted, false))
+  );
+
+  return useMemo(() => {
+    if (!rawSections || !rawDeeds) return [];
+
+    const deedsMap = new Map<string, DeedRow[]>();
+    for (const deed of rawDeeds) {
+      if (!deedsMap.has(deed.sectionId)) {
+        deedsMap.set(deed.sectionId, []);
+      }
+      deedsMap.get(deed.sectionId)!.push(deed);
+    }
+
+    const sortedSecs = [...rawSections].sort((a, b) => a.sortOrder - b.sortOrder);
+    return sortedSecs.map((sec) => {
+      const items = deedsMap.get(sec.id) ?? [];
+      items.sort((a, b) => a.sortOrder - b.sortOrder);
+      return { section: sec, deeds: items };
+    });
+  }, [rawSections, rawDeeds]);
+}
+
+/**
+ * Reactive: Returns all deed definitions (presets/suggestions).
+ */
+export function useDeedDefinitions(): DeedDefinitionRow[] {
+  const { data } = useLiveQuery(
+    db
+      .select()
+      .from(deedDefinitions)
+  );
+
+  return useMemo(() => {
+    return data ?? [];
+  }, [data]);
+}
+

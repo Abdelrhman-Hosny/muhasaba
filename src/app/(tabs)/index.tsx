@@ -59,7 +59,7 @@ export default function DayScreen() {
     <View style={{ flex: 1, backgroundColor: theme.colors.bg, paddingTop: insets.top }}>
       {/* Header: ☰  App Name */}
       <View style={{ flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse', alignItems: 'center', justifyContent: 'space-between', padding: 16 }}>
-        <Text style={{ color: theme.colors.text, fontFamily: theme.font, fontSize: 20, fontWeight: 'bold' }}>
+        <Text style={{ color: theme.colors.text, fontFamily: theme.fontBold, fontSize: 20 }}>
           {ar.appName}
         </Text>
         <Pressable hitSlop={8} onPress={() => setDrawerVisible(true)}>
@@ -83,7 +83,7 @@ export default function DayScreen() {
                 backgroundColor: active ? theme.colors.primary : theme.colors.surface,
                 minWidth: 70
               }}>
-              <Text style={{ fontFamily: theme.font, fontSize: 14, color: active ? '#fff' : theme.colors.text }}>
+              <Text style={{ fontFamily: active ? theme.fontBold : theme.font, fontSize: 14, color: active ? '#fff' : theme.colors.text }}>
                 {lbl.top}
               </Text>
               <Text style={{ fontFamily: theme.font, fontSize: 11, color: active ? '#dfeee5' : theme.colors.muted }}>
@@ -101,7 +101,7 @@ export default function DayScreen() {
       <View style={{ marginHorizontal: 16, marginTop: 16, marginBottom: 4 }}>
         <View style={{ flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
           <Text style={{ color: theme.colors.muted, fontFamily: theme.font, fontSize: 13 }}>{ar.summary.completed}</Text>
-          <Text style={{ color: theme.colors.text, fontFamily: theme.font, fontSize: 15 }}>
+          <Text style={{ color: theme.colors.text, fontFamily: theme.fontBold, fontSize: 15 }}>
             {`\u200E${formattedScore} / ${toArabicNumeral(totalTasks)} (${toArabicNumeral(todayPercentage)}%)`}
           </Text>
         </View>
@@ -116,11 +116,10 @@ export default function DayScreen() {
           <View key={section.id} style={{ marginBottom: 16 }}>
             <Text style={{
               color: theme.colors.primary,
-              fontFamily: theme.font,
+              fontFamily: theme.fontBold,
               fontSize: 16,
               textAlign: 'right',
               marginBottom: 8,
-              fontWeight: 'bold'
             }}>
               {section.name}
             </Text>

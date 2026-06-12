@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { I18nManager, View, Text, ActivityIndicator, AppState, AppStateStatus } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
-import { useFonts, Cairo_400Regular } from '@expo-google-fonts/cairo';
+import { useFonts, Cairo_400Regular, Cairo_700Bold } from '@expo-google-fonts/cairo';
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
 import { db } from '@/db/client';
 import migrations from '../../drizzle/migrations';
@@ -25,7 +25,10 @@ function Centered({ children }: { children: React.ReactNode }) {
 }
 
 export default function RootLayout() {
-  const [fontsLoaded] = useFonts({ Cairo: Cairo_400Regular });
+  const [fontsLoaded] = useFonts({
+    Cairo: Cairo_400Regular,
+    'Cairo-Bold': Cairo_700Bold,
+  });
   const { success, error } = useMigrations(db, migrations);
 
   useEffect(() => {
