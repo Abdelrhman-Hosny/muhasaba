@@ -119,7 +119,7 @@ export default function DayScreen() {
               color: theme.colors.primary,
               fontFamily: theme.fontBold,
               fontSize: 16,
-              textAlign: 'right',
+              textAlign: I18nManager.isRTL ? 'left' : 'right',
               marginBottom: 8,
             }}>
               {section.name}

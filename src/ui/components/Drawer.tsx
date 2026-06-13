@@ -145,7 +145,7 @@ function createStyles(theme: ThemeType) {
     header: { flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse', marginBottom: 32 },
     menu: { flex: 1, gap: 24 },
     menuItem: { paddingVertical: 8 },
-    menuItemText: { color: theme.colors.text, fontFamily: theme.font, fontSize: 18, textAlign: 'right' },
+    menuItemText: { color: theme.colors.text, fontFamily: theme.font, fontSize: 18, textAlign: I18nManager.isRTL ? 'left' : 'right' },
     themeToggleContainer: {
       marginTop: 12,
       paddingTop: 24,
@@ -157,7 +157,7 @@ function createStyles(theme: ThemeType) {
       color: theme.colors.muted,
       fontFamily: theme.fontBold,
       fontSize: 14,
-      textAlign: 'right',
+      textAlign: I18nManager.isRTL ? 'left' : 'right',
       marginBottom: 12,
     },
     themeRow: {
@@ -193,6 +193,6 @@ function createStyles(theme: ThemeType) {
       fontFamily: theme.fontBold,
     },
     footer: { paddingBottom: 40 },
-    version: { color: theme.colors.muted, fontFamily: theme.font, fontSize: 14, textAlign: 'right' },
+    version: { color: theme.colors.muted, fontFamily: theme.font, fontSize: 14, textAlign: I18nManager.isRTL ? 'left' : 'right' },
   });
 }

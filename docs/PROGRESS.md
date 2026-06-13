@@ -186,6 +186,8 @@ Based on [UX spec](superpowers/specs/2026-06-11-ux-discussion-summary.md) and [A
 - [x] Replaced the simple text cycle toggle with a premium segmented theme selector card featuring active theme icons (`sunny-outline`, `moon-outline`, `contrast-outline`)
 - [x] Renamed the drawer settings entry to `'تعديل الجدول والعبادات'` (Edit Schedule & Worships) to signify editing
 - [x] Replaced `'القرآن الكريم'` section in the database seeding and migrations with `'أعمال على مدار اليوم'` (Things to do throughout the day)
+- [x] Fixed RTL layout mirroring where `textAlign: 'right'` was placing items on the left side of the screen/cards by using `textAlign: I18nManager.isRTL ? 'left' : 'right'` for section headers, labels, and text views
+- [x] Corrected `deedInfo` items layout alignment inside `settings.tsx` to align to the right under RTL by making `alignItems` and horizontal padding conditional on `I18nManager.isRTL`
 
 ### Housekeeping & Tests
 - [x] Cleaned up unused styles and imports from `settings.tsx`
