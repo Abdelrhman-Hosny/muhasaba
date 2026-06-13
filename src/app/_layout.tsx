@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { I18nManager, View, Text, ActivityIndicator, AppState, AppStateStatus } from 'react-native';
+import { I18nManager, View, Text, ActivityIndicator, AppState, AppStateStatus, StyleSheet } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
 import { useFonts, Cairo_400Regular, Cairo_700Bold } from '@expo-google-fonts/cairo';
@@ -50,8 +50,15 @@ export default function RootLayout() {
     return () => subscription.remove();
   }, [success]);
 
-  if (error) return <Centered><Text style={{ color: theme.colors.text, fontFamily: theme.font }}>{String(error.message)}</Text></Centered>;
-  if (!success || !fontsLoaded) return <Centered><ActivityIndicator color={theme.colors.primary} /></Centered>;
+  if (error) {
+    return (
+      <Centered>
+        <Text style={{ color: theme.colors.text, fontFamily: theme.font }}>{String(error.message)}</Text>
+      </Centered>
+    );
+  }
+
+  const isReady = success && fontsLoaded;
 
   return (
     <SafeAreaProvider>
@@ -59,6 +66,13 @@ export default function RootLayout() {
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       </Stack>
+      {!isReady && (
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: theme.colors.bg }]}>
+          <Centered>
+            <ActivityIndicator color={theme.colors.primary} />
+          </Centered>
+        </View>
+      )}
     </SafeAreaProvider>
   );
 }

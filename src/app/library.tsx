@@ -4,10 +4,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme, ThemeType } from '@/ui/theme';
-import { useDeedDefinitions, useScorecardStructure, addDeed, addDhikrCounter, DhikrRow } from '@/state/deedStore';
+import { useDeedDefinitions, useScorecardStructure, addDeed, addDhikrCounter } from '@/state/deedStore';
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
 import { db } from '@/db/client';
-import { dhikrs } from '@/db/schema';
+import { dhikrs, DhikrRow } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 
 if (!I18nManager.isRTL) {
@@ -90,8 +90,12 @@ export default function DeedsLibraryScreen() {
   };
 
   const getBundleName = (bundleId: string) => {
-    if (bundleId === 'rawateb') return 'سنن الرواتب';
-    if (bundleId === 'prayers') return 'الصلوات الخمس';
+    if (bundleId === 'rawateb' || bundleId === 'bundle_rawateb') return 'سنن الرواتب';
+    if (bundleId === 'prayers' || bundleId === 'bundle_prayers') return 'الصلوات الخمس';
+    if (bundleId === 'bundle_adhkar_salah') return 'أذكار الصلاة';
+    if (bundleId === 'bundle_friday') return 'وظائف يوم الجمعة';
+    if (bundleId === 'bundle_adhkar_muqayyada') return 'الأذكار المقيدة اليومية';
+    if (bundleId === 'bundle_adhkar_mutlaqa') return 'الأذكار المطلقة';
     return bundleId;
   };
 
@@ -120,15 +124,19 @@ export default function DeedsLibraryScreen() {
     }
 
     // 2. Add deed to the database scorecard
-    await addDeed({
-      definitionId: item.id,
-      name: item.name,
-      type: item.type as 'boolean' | 'measured',
-      sectionId: item.defaultSectionId,
-      schedule: item.defaultSchedule,
-      target: item.linkedDhikrTemplate ? (JSON.parse(item.linkedDhikrTemplate) as { target: number }).target : undefined,
-      linkedDhikrId,
-    });
+    const targetVal = item.linkedDhikrTemplate
+      ? (JSON.parse(item.linkedDhikrTemplate) as { target: number }).target
+      : null;
+
+    await addDeed(
+      item.name,
+      item.defaultSectionId,
+      item.type as 'boolean' | 'measured',
+      item.defaultSchedule,
+      targetVal,
+      linkedDhikrId ?? null,
+      item.id
+    );
   };
 
   return (
@@ -190,7 +198,7 @@ export default function DeedsLibraryScreen() {
                     }
                   }}
                 >
-                  {isAllActive && <Ionicons name="checkmark" size={16} color="#fff" />}
+                  {isAllActive && <Ionicons name="checkmark" size={16} color={theme.colors.onPrimary} />}
                   {isPartial && <View style={styles.partialDash} />}
                 </Pressable>
               </Pressable>
@@ -208,7 +216,7 @@ export default function DeedsLibraryScreen() {
                             if (!isActive) handleAddDeed(item);
                           }}
                         >
-                          {isActive && <Ionicons name="checkmark" size={16} color="#fff" />}
+                          {isActive && <Ionicons name="checkmark" size={16} color={theme.colors.onPrimary} />}
                         </Pressable>
                       </View>
                     );
@@ -234,7 +242,7 @@ export default function DeedsLibraryScreen() {
                       if (!isActive) handleAddDeed(item);
                     }}
                   >
-                    {isActive && <Ionicons name="checkmark" size={16} color="#fff" />}
+                    {isActive && <Ionicons name="checkmark" size={16} color={theme.colors.onPrimary} />}
                   </Pressable>
                 </View>
               );

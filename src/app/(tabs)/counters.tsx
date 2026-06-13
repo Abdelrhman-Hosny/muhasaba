@@ -120,6 +120,7 @@ export default function CountersScreen() {
             const target = dhikr.target;
             const hasTarget = target !== null && target > 0;
             const completed = hasTarget && count >= (target ?? 0);
+            const progressPct = hasTarget ? Math.min(100, (count / (target ?? 1)) * 100) : 0;
 
             return (
               <Pressable
@@ -127,40 +128,52 @@ export default function CountersScreen() {
                 testID={`counter-row-${dhikr.id}`}
                 onPress={() => setSelectedId(dhikr.id)}
                 style={{
-                  flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
                   backgroundColor: active ? theme.colors.surfaceDone : theme.colors.surface,
                   borderWidth: 1.5,
-                  borderColor: active ? theme.colors.primary : 'transparent',
-                  padding: 16,
+                  borderColor: active ? theme.colors.primary : theme.colors.translucentBorder,
                   borderRadius: 14,
                   marginBottom: 10,
+                  overflow: 'hidden',
                   elevation: active ? 1 : 0,
                 }}
               >
-                <View style={{ flexDirection: 'column', alignItems: I18nManager.isRTL ? 'flex-start' : 'flex-end', flex: 1, paddingRight: I18nManager.isRTL ? 0 : 8, paddingLeft: I18nManager.isRTL ? 8 : 0 }}>
-                  <Text style={{ color: theme.colors.text, fontFamily: theme.font, fontSize: 18, fontWeight: 'bold' }}>
-                    {dhikr.name}
-                  </Text>
-                  <View style={{ flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse', alignItems: 'center', gap: 6, marginTop: 4 }}>
-                    <Text style={{ color: completed ? theme.colors.primary : theme.colors.muted, fontFamily: theme.font, fontSize: 14 }}>
-                      {`\u200E${toArabicNumeral(count)}${hasTarget ? ` / ${toArabicNumeral(target ?? 0)}` : ''}`}
+                <View style={{
+                  flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  paddingVertical: 12,
+                  paddingHorizontal: 16,
+                }}>
+                  <View style={{ flexDirection: 'column', alignItems: I18nManager.isRTL ? 'flex-start' : 'flex-end', flex: 1, paddingRight: I18nManager.isRTL ? 0 : 8, paddingLeft: I18nManager.isRTL ? 8 : 0 }}>
+                    <Text style={{ color: theme.colors.text, fontFamily: theme.font, fontSize: 18, fontWeight: 'bold', writingDirection: 'rtl' }}>
+                      {dhikr.name}
                     </Text>
+                    <View style={{ flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                      <Text style={{ color: completed ? theme.colors.primary : theme.colors.muted, fontFamily: theme.font, fontSize: 14 }}>
+                        {`\u200E${toArabicNumeral(count)}${hasTarget ? ` / ${toArabicNumeral(target ?? 0)}` : ''}`}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                    {/* Delete Button */}
+                    <Pressable
+                      testID={`btn-delete-${dhikr.id}`}
+                      onPress={() => handleDelete(dhikr.id)}
+                      hitSlop={8}
+                      style={{ padding: 4 }}
+                    >
+                      <Ionicons name="trash-outline" size={20} color={theme.colors.muted} />
+                    </Pressable>
                   </View>
                 </View>
 
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                  {/* Delete Button */}
-                  <Pressable
-                    testID={`btn-delete-${dhikr.id}`}
-                    onPress={() => handleDelete(dhikr.id)}
-                    hitSlop={8}
-                    style={{ padding: 4 }}
-                  >
-                    <Ionicons name="trash-outline" size={20} color={theme.colors.muted} />
-                  </Pressable>
-                </View>
+                {/* Progress toward target \u2014 fills the card width meaningfully */}
+                {hasTarget && (
+                  <View style={{ height: 4, backgroundColor: theme.colors.translucentBorder, width: '100%' }}>
+                    <View style={{ height: '100%', width: `${progressPct}%`, backgroundColor: theme.colors.primary }} />
+                  </View>
+                )}
               </Pressable>
             );
           })
@@ -174,7 +187,7 @@ export default function CountersScreen() {
             borderTopWidth: 1,
             borderTopColor: theme.colors.translucentBorderStrong,
             padding: 16,
-            paddingBottom: insets.bottom + 16,
+            paddingBottom: 16,
             backgroundColor: theme.colors.surface,
           }}
         >
@@ -281,7 +294,7 @@ export default function CountersScreen() {
                   justifyContent: 'center',
                 }}
               >
-                <Text style={{ fontFamily: theme.font, fontSize: 16, fontWeight: 'bold', color: mode === 'add' ? '#fff' : theme.colors.muted }}>
+                <Text style={{ fontFamily: theme.font, fontSize: 16, fontWeight: 'bold', color: mode === 'add' ? theme.colors.onPrimary : theme.colors.muted }}>
                   +
                 </Text>
               </Pressable>
@@ -296,7 +309,7 @@ export default function CountersScreen() {
                   justifyContent: 'center',
                 }}
               >
-                <Text style={{ fontFamily: theme.font, fontSize: 16, fontWeight: 'bold', color: mode === 'sub' ? '#fff' : theme.colors.muted }}>
+                <Text style={{ fontFamily: theme.font, fontSize: 16, fontWeight: 'bold', color: mode === 'sub' ? theme.colors.onPrimary : theme.colors.muted }}>
                   -
                 </Text>
               </Pressable>
@@ -423,7 +436,7 @@ export default function CountersScreen() {
                   justifyContent: 'center',
                 }}
               >
-                <Text style={{ fontFamily: theme.font, fontSize: 16, color: '#fff', fontWeight: 'bold' }}>
+                <Text style={{ fontFamily: theme.font, fontSize: 16, color: theme.colors.onPrimary, fontWeight: 'bold' }}>
                   {ar.counters.add}
                 </Text>
               </Pressable>

@@ -17,6 +17,8 @@ export default function TabsLayout() {
         tabBarInactiveTintColor: theme.colors.muted,
         tabBarLabelStyle: {
           fontFamily: theme.font,
+          fontSize: 11,
+          writingDirection: 'rtl',
         },
       }}
     >
@@ -32,6 +34,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="week"
         options={{
+          href: null,
           title: ar.tabs.week,
           tabBarIcon: ({ focused, color, size }) => (
             <Ionicons name={focused ? 'calendar' : 'calendar-outline'} size={size} color={color} />

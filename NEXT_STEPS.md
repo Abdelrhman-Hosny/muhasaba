@@ -27,10 +27,11 @@ Note: Android 12 on the phone is fine — not the cause. App `minSdk` is 24.
 
 ## 🧹 Polish (optional)
 
-- **Auto-scroll the day strip** to the selected chip (older selected days currently clip at the edge). Add a `ScrollView` ref + `scrollTo` on mount/select.
-- **Bold title:** only `Cairo_400Regular` is loaded. Add `Cairo_700Bold` to `useFonts` so the header and the `3 / 5` progress count can be bold.
-- **`/account` route is missing** — the person icon in the header links to `/account` but there's no `app/account` screen yet (also shows as a `tsc` error). Scaffold it.
-- Consider a **circular progress ring** instead of the bar, and/or a **7-day streak row**.
+- [x] **Auto-scroll the day strip** to the selected chip (added `ScrollView` ref + `scrollTo` on selected change).
+- [x] **Bold title:** Loaded `Cairo_700Bold` and set up `fontBold` in theme.
+- [x] **`/account` route is missing** — Scaffolded `/account` screen.
+- [ ] **Custom Deed Save Alert Popup Bug**: Success alert popup for newly created custom deeds doesn't reliably show on some systems/devices (potentially due to modal/navigation unmount race conditions).
+- [ ] Consider a **circular progress ring** instead of the bar, and/or a **7-day streak row**.
 
 ## 🔭 Feature direction
 

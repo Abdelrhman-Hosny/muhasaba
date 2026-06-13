@@ -5,6 +5,7 @@ import { user$ } from './auth';
 import { syncStatus$ } from './syncStatus';
 import { eq, and, isNull, inArray } from 'drizzle-orm';
 import { createMMKV } from 'react-native-mmkv';
+import { DEFAULT_DEED_DEFINITIONS } from '@/db/seed';
 
 // MMKV client-side persistence for tracking sync metadata
 let storage: ReturnType<typeof createMMKV> | null = null;
@@ -282,6 +283,25 @@ async function pullRemote(userId: string) {
   await pullTableRemote(dhikrLogsConfig, userId);
 }
 
+async function pushDeedDefinitions() {
+  const remoteDefs = DEFAULT_DEED_DEFINITIONS.map((d) => ({
+    id: d.id,
+    name: d.name,
+    type: d.type,
+    default_schedule: d.defaultSchedule,
+    payload: d.linkedDhikrTemplate || null,
+  }));
+
+  const { error } = await supabase
+    .from('deed_definitions')
+    .upsert(remoteDefs, { onConflict: 'id' });
+
+  if (error) {
+    console.error('[Sync] Error syncing deed definitions to remote:', error);
+    throw error;
+  }
+}
+
 let syncTimeout: ReturnType<typeof setTimeout> | null = null;
 let isSyncing = false;
 
@@ -297,6 +317,7 @@ export async function runSync() {
   syncStatus$.set('syncing');
 
   try {
+    await pushDeedDefinitions();
     await pushDirty(user.id);
     await pullRemote(user.id);
     syncStatus$.set('synced');

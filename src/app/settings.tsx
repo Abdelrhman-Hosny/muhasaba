@@ -48,6 +48,50 @@ function getScheduleLabel(schedule: string): string {
   return `مخصص: ${shortDays.join('، ')}`;
 }
 
+function getNextActiveDate(schedule: string): Date {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // midnight
+
+  if (!schedule || schedule === 'daily') {
+    return today;
+  }
+
+  let activeDays: number[] = [];
+  if (schedule === 'weekdays') {
+    activeDays = [1, 2, 3, 4, 5]; // Mon to Fri
+  } else if (schedule === 'weekly_anytime') {
+    return today;
+  } else {
+    activeDays = schedule.split(',').map(Number);
+  }
+
+  // Loop up to 7 days in the future to find the first active day
+  for (let i = 0; i <= 7; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() + i);
+    const dayOfWeek = d.getDay(); // 0 = Sun, 1 = Mon ...
+    if (activeDays.includes(dayOfWeek)) {
+      return d;
+    }
+  }
+
+  return today;
+}
+
+function formatArabicDate(d: Date): string {
+  const dayNames = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+  const monthNames = [
+    'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
+    'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
+  ];
+  
+  const dayName = dayNames[d.getDay()];
+  const dayOfMonth = d.getDate();
+  const monthName = monthNames[d.getMonth()];
+  
+  return `${dayName}، ${dayOfMonth} ${monthName}`;
+}
+
 function getPresetSectionId(presetId: string): string {
   if (['fajr', 'sunnah_fajr', 'adhkar_morning'].includes(presetId)) return 'sec_morning';
   if (['dhuhr', 'duha'].includes(presetId)) return 'sec_dhuhr';
@@ -233,6 +277,7 @@ export default function SettingsScreen() {
           linkedDhikrId: deedLinkedDhikrId,
           definitionId: deedDefinitionId,
         });
+        handleCloseDeedModal();
       } else {
         await addDeed(
           deedName.trim(),
@@ -243,8 +288,23 @@ export default function SettingsScreen() {
           deedLinkedDhikrId,
           deedDefinitionId
         );
+        const scheduleLabel = getScheduleLabel(finalSchedule);
+        const nextActiveDate = getNextActiveDate(finalSchedule);
+        const formattedDate = formatArabicDate(nextActiveDate);
+        Alert.alert(
+          ar.settings.deeds.saveSuccessTitle,
+          ar.settings.deeds.saveSuccessBody
+            .replace('{name}', deedName.trim())
+            .replace('{schedule}', scheduleLabel)
+            .replace('{date}', formattedDate),
+          [{
+            text: 'موافق',
+            onPress: () => {
+              handleCloseDeedModal();
+            }
+          }]
+        );
       }
-      handleCloseDeedModal();
     } catch (err) {
       console.error(err);
       Alert.alert('خطأ', 'فشل حفظ العبادة');
@@ -488,12 +548,12 @@ export default function SettingsScreen() {
       <View style={[styles.bottomBar, { paddingBottom: insets.bottom + 12 }]}>
         {activeTab === 'deeds' ? (
           <Pressable style={styles.primaryBtn} onPress={handleOpenAddDeed} testID="btn-add-deed">
-            <Ionicons name="add" size={22} color="#fff" />
+            <Ionicons name="add" size={22} color={theme.colors.onPrimary} />
             <Text style={styles.primaryBtnText}>{ar.settings.deeds.add}</Text>
           </Pressable>
         ) : (
           <Pressable style={styles.primaryBtn} onPress={handleOpenAddDhikr} testID="btn-add-dhikr">
-            <Ionicons name="add" size={22} color="#fff" />
+            <Ionicons name="add" size={22} color={theme.colors.onPrimary} />
             <Text style={styles.primaryBtnText}>{ar.settings.dhikrs.add}</Text>
           </Pressable>
         )}
@@ -525,7 +585,7 @@ export default function SettingsScreen() {
                 <TextInput
                   testID="input-deed-name"
                   placeholder={ar.settings.deeds.placeholderName}
-                  placeholderTextColor="rgba(255,255,255,0.3)"
+                  placeholderTextColor={theme.colors.inputPlaceholder}
                   value={deedName}
                   onChangeText={setDeedName}
                   style={styles.input}
@@ -568,8 +628,8 @@ export default function SettingsScreen() {
                       setDeedType('measured');
                     }
                   }}
-                  trackColor={{ false: 'rgba(255,255,255,0.08)', true: theme.colors.primary }}
-                  thumbColor={showTargetInput ? '#fff' : '#888'}
+                  trackColor={{ false: theme.colors.translucentBgActive, true: theme.colors.primary }}
+                  thumbColor={showTargetInput ? theme.colors.onPrimary : theme.colors.switchThumb}
                 />
               </View>
 
@@ -580,7 +640,7 @@ export default function SettingsScreen() {
                   <TextInput
                     testID="input-deed-target"
                     placeholder="مثال: 10"
-                    placeholderTextColor="rgba(255,255,255,0.3)"
+                    placeholderTextColor={theme.colors.inputPlaceholder}
                     keyboardType="number-pad"
                     value={deedTarget}
                     onChangeText={(text) => {
@@ -699,7 +759,7 @@ export default function SettingsScreen() {
                 <TextInput
                   testID="input-dhikr-name"
                   placeholder={ar.settings.dhikrs.placeholderName}
-                  placeholderTextColor="rgba(255,255,255,0.3)"
+                  placeholderTextColor={theme.colors.inputPlaceholder}
                   value={dhikrName}
                   onChangeText={setDhikrName}
                   style={styles.input}
@@ -712,7 +772,7 @@ export default function SettingsScreen() {
                 <TextInput
                   testID="input-dhikr-target"
                   placeholder="مثال: 100"
-                  placeholderTextColor="rgba(255,255,255,0.3)"
+                  placeholderTextColor={theme.colors.inputPlaceholder}
                   keyboardType="number-pad"
                   value={dhikrTarget}
                   onChangeText={(text) => setDhikrTarget(text.replace(/[^0-9]/g, ''))}
@@ -784,7 +844,7 @@ function createStyles(theme: ThemeType) {
     },
     activeTabText: {
       fontFamily: theme.fontBold,
-      color: '#fff',
+      color: theme.colors.onPrimary,
     },
     scrollContent: {
       paddingHorizontal: 16,
@@ -794,7 +854,7 @@ function createStyles(theme: ThemeType) {
       marginBottom: 20,
     },
     sectionHeader: {
-      color: theme.colors.primary,
+      color: theme.colors.text,
       fontFamily: theme.fontBold,
       fontSize: 16,
       textAlign: I18nManager.isRTL ? 'left' : 'right',
@@ -819,7 +879,8 @@ function createStyles(theme: ThemeType) {
       alignItems: 'center',
       justifyContent: 'space-between',
       backgroundColor: theme.colors.surface,
-      padding: 14,
+      paddingVertical: 12,
+      paddingHorizontal: 14,
       borderRadius: 14,
       marginBottom: 8,
       borderWidth: 1,
@@ -836,6 +897,7 @@ function createStyles(theme: ThemeType) {
       fontFamily: theme.fontBold,
       fontSize: 16,
       textAlign: I18nManager.isRTL ? 'left' : 'right',
+      writingDirection: 'rtl',
       alignSelf: 'stretch',
     },
     metaRow: {
@@ -905,7 +967,7 @@ function createStyles(theme: ThemeType) {
     },
     primaryBtnText: {
       fontFamily: theme.fontBold,
-      color: '#fff',
+      color: theme.colors.onPrimary,
       fontSize: 16,
     },
 
@@ -1030,7 +1092,7 @@ function createStyles(theme: ThemeType) {
     },
     activeSegmentText: {
       fontFamily: theme.fontBold,
-      color: '#fff',
+      color: theme.colors.onPrimary,
     },
     modalActions: {
       flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse',
@@ -1060,7 +1122,7 @@ function createStyles(theme: ThemeType) {
     },
     modalSaveText: {
       fontFamily: theme.fontBold,
-      color: '#fff',
+      color: theme.colors.onPrimary,
       fontSize: 15,
     },
     dayBubblesRow: {
@@ -1092,7 +1154,7 @@ function createStyles(theme: ThemeType) {
     },
     dayBubbleTextSelected: {
       fontFamily: theme.fontBold,
-      color: '#fff',
+      color: theme.colors.onPrimary,
     },
     dayColumn: {
       alignItems: 'center',

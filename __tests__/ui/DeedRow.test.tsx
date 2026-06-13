@@ -2,6 +2,15 @@ import { render, fireEvent } from '@testing-library/react-native';
 import { DeedRow } from '@/ui/components/DeedRow';
 import { DeedRow as DeedRowType, DeedLogRow } from '@/db/schema';
 
+jest.mock('@/domain/azkarData', () => ({
+  morningAdhkar: [
+    { dhikr: 'Test Morning Dhikr', description: 'Test desc', count: 1, reference: 'Ref' }
+  ],
+  eveningAdhkar: [
+    { dhikr: 'Test Evening Dhikr', description: 'Test desc', count: 1, reference: 'Ref' }
+  ],
+}));
+
 describe('DeedRow', () => {
   it('toggles boolean status on press', () => {
     const onChange = jest.fn();
@@ -24,7 +33,7 @@ describe('DeedRow', () => {
     };
 
     const { getByTestId } = render(
-      <DeedRow deed={deed} log={null} onChange={onChange} />
+      <DeedRow deed={deed} log={null} date="2026-06-12" onChange={onChange} />
     );
 
     fireEvent.press(getByTestId('btn-toggle'));
@@ -65,7 +74,7 @@ describe('DeedRow', () => {
     };
 
     const { getByTestId, queryByTestId } = render(
-      <DeedRow deed={deed} log={log} onChange={onChange} />
+      <DeedRow deed={deed} log={log} date="2026-06-12" onChange={onChange} />
     );
 
     // Slider track should be hidden by default
@@ -113,7 +122,7 @@ describe('DeedRow', () => {
     };
 
     const { getByTestId } = render(
-      <DeedRow deed={deed} log={null} onChange={onChange} />
+      <DeedRow deed={deed} log={null} date="2026-06-12" onChange={onChange} />
     );
 
     // Press quick toggle button (the checkbox icon)
@@ -156,7 +165,7 @@ describe('DeedRow', () => {
     };
 
     const { getByTestId, queryByTestId } = render(
-      <DeedRow deed={deed} log={log} onChange={onChange} />
+      <DeedRow deed={deed} log={log} date="2026-06-12" onChange={onChange} />
     );
 
     // Increment chips should be hidden by default
@@ -174,5 +183,95 @@ describe('DeedRow', () => {
     // Tap +5 chip
     fireEvent.press(getByTestId('btn-chip-5'));
     expect(onChange).toHaveBeenCalledWith('not_yet', 5);
+  });
+
+  it('toggles to not_done status on press of not-done button for boolean deeds', () => {
+    const onChange = jest.fn();
+    const deed: DeedRowType = {
+      id: 'deed_fajr',
+      userId: null,
+      definitionId: 'fajr',
+      sectionId: 'sec_prayers',
+      name: 'الفجر',
+      type: 'boolean',
+      schedule: 'daily',
+      createdAt: '2026-06-12',
+      sortOrder: 1,
+      deletedAt: null,
+      linkedDhikrId: null,
+      target: null,
+      updatedAt: Date.now(),
+      deleted: false,
+      dirty: false,
+    };
+
+    const { getByTestId } = render(
+      <DeedRow deed={deed} log={null} date="2026-06-12" onChange={onChange} />
+    );
+
+    fireEvent.press(getByTestId('btn-not-done'));
+    expect(onChange).toHaveBeenCalledWith('not_done', null);
+  });
+
+  it('toggles to not_done status on press of not-done button for measured deeds', () => {
+    const onChange = jest.fn();
+    const deed: DeedRowType = {
+      id: 'deed_quran',
+      userId: null,
+      definitionId: 'quran_reading',
+      sectionId: 'sec_quran',
+      name: 'ورد التلاوة',
+      type: 'measured',
+      schedule: 'daily',
+      createdAt: '2026-06-12',
+      sortOrder: 1,
+      deletedAt: null,
+      linkedDhikrId: null,
+      target: 10,
+      updatedAt: Date.now(),
+      deleted: false,
+      dirty: false,
+    };
+
+    const { getByTestId } = render(
+      <DeedRow deed={deed} log={null} date="2026-06-12" onChange={onChange} />
+    );
+
+    fireEvent.press(getByTestId('btn-not-done'));
+    expect(onChange).toHaveBeenCalledWith('not_done', null);
+  });
+
+  it('automatically marks adhkar deed as done when all individual azkar are completed', () => {
+    const onChange = jest.fn();
+    const deed: DeedRowType = {
+      id: 'deed_adhkar_morning',
+      userId: null,
+      definitionId: 'adhkar_morning',
+      sectionId: 'sec_morning',
+      name: 'أذكار الصباح',
+      type: 'boolean',
+      schedule: 'daily',
+      createdAt: '2026-06-12',
+      sortOrder: 1,
+      deletedAt: null,
+      linkedDhikrId: null,
+      target: null,
+      updatedAt: Date.now(),
+      deleted: false,
+      dirty: false,
+    };
+
+    const { getByTestId } = render(
+      <DeedRow deed={deed} log={null} date="2026-06-12" onChange={onChange} />
+    );
+
+    // Open the modal
+    fireEvent.press(getByTestId('btn-book'));
+
+    // Tap the first dhikr card (index 0) to increment it
+    fireEvent.press(getByTestId('dhikr-card-0'));
+
+    // It should automatically mark the deed as done since it has completed 1/1 count
+    expect(onChange).toHaveBeenCalledWith('done', null);
   });
 });

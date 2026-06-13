@@ -213,14 +213,48 @@ Based on [UX spec](superpowers/specs/2026-06-11-ux-discussion-summary.md) and [A
 
 ---
 
+## ✅ Iteration 5.2 — Standalone Deeds & Adhkar Mutlaqa Refinement (2026-06-13)
+
+### Schema & Seeding
+- [x] Moved all "الأذكار المطلقة" (Adhkar Mutlaqa) definitions (`dhikr_istighfar_lib`, `dhikr_tasbih_lib`, `dhikr_salawat_lib`, `dhikr_tahlil_lib`, `dhikr_hawqala_lib`) to by default belong to the throughout-the-day section (`sec_quran` / "أعمال على مدار اليوم") instead of the morning section (`sec_morning`).
+- [x] Added "لا حول ولا قوة إلا بالله" (Hawqala) to the default deeds scorecard for new users, mapped to its corresponding absolute dhikr counter.
+- [x] Moved default "الاستغفار" (Istighfar) deed to the throughout-the-day section (`sec_quran` / "أعمال على مدار اليوم").
+- [x] Added "قيام الليل" (Qiym Layl) and "تفسير / تدبر" (Tafsir / Tadabbur) standalone deed presets to the library under the "عبادات فردية" (Ibadat Fardeya / Standalone Deeds) section.
+- [x] Configured robust database seeding incremental migrations in `seedDatabase()` to cleanly update existing users' database schema configurations (moving existing Adhkar Mutlaqa deeds/definitions to `sec_quran`, ensuring new definitions and counters exist) without resetting their logs or local storage.
+- [x] Split the combined **الأذكار المقيدة اليومية** (Adhkar Muqayyada) definitions into separate deeds (e.g. splitting sleeping/waking, entering/leaving toilet & wudhu, entering/leaving home & riding, walking/entering/leaving mosque, gathering istighfar & gathering expiation) and migrated any existing scorecard deeds for users.
+- [x] Configured all absolute dhikrs (**الأذكار المطلقة** - Istighfar, Tasbih, Salawat, Tahlil, Hawqala) to be `'measured'` types with a target of 100 rather than simple `'boolean'` checkmarks, displaying progress bars, counters, and stepper chips on the scorecard.
+
+---
+
+## ✅ Iteration 6 — Dhikr Reader (2026-06-13)
+
+### Core Features
+- [x] Dhikr-linked deeds: mark done directly OR open reader (via dedicated book icon)
+- [x] Reader: vertical list modal layout, each dhikr item with text description, reference, tap-to-count, and reset
+- [x] Finishing all items automatically marks the parent deed as done (via reactive `useEffect` monitoring MMKV azkar progress counts)
+- [x] Manual completion button available inside reader modal ("إتمام العبادة وتسجيلها")
+
+---
+
+## ✅ Iteration 6.5 — UI Polish: Skip Toggles, Dynamic Dates Strip, Padding & Tab Cleanups (2026-06-13)
+
+### Core UI & UX Polish
+- [x] Side-by-side action buttons (`[ Checkbox ]` and `[ X ]`) added directly to `DeedRow` for discoverable skip/mark-done states.
+- [x] Auto-marking parent deeds as done when all sub-adhkars are completed inside the reader.
+- [x] Redundant safe-area bottom inset padding removed from the Counters persistent keypad since the bottom tab bar handles it.
+- [x] Date strip dynamically starts from the user's first logged deed/active count, preventing empty days from displaying.
+- [x] Hid the Week tab screen (`href: null`) and Statistics menu option in Drawer (commented out) to prepare for clean release.
+
+---
+
 ## 🔲 Remaining Work (by priority)
 
 ### Iteration 3 — Day Screen Polish
 - [ ] Sections with sticky headers (الصبح، الظهر، القرآن…)
-- [ ] Collapsed "تم إنجازها" section for completed tasks
-- [ ] Measured tasks (e.g., pages read → fraction score)
-- [ ] Auto-scroll date strip to selected chip
-- [ ] Bold font variant (`Cairo_700Bold`)
+- [x] Collapsed "تم إنجازها" section for completed tasks
+- [x] Measured tasks (e.g., pages read → fraction score)
+- [x] Auto-scroll date strip to selected chip
+- [x] Bold font variant (`Cairo_700Bold`)
 
 ### Iteration 5 — Edit Scorecard
 - [ ] Dedicated "تعديل الجدول" screen from Settings
@@ -229,23 +263,6 @@ Based on [UX spec](superpowers/specs/2026-06-11-ux-discussion-summary.md) and [A
 - [x] Add custom deed
 - [ ] Deed settings modal (schedule type, section assignment)
 - [ ] Delete deed
-
-### Iteration 6 — Dhikr Reader
-- [ ] Dhikr-linked deeds: mark done directly OR open reader
-- [ ] Reader: vertical list, each dhikr with text + tap-to-count
-- [ ] Finishing all items auto-marks deed done
-- [ ] Manual completion available inside reader
-
-### Iteration 8 — Week Screen
-- [ ] "أعمال الأسبوع" section for weekly-anytime deeds
-- [ ] Visible every day until checked, then shows ✓ for rest of week
-- [ ] Separate weekly total (not in daily %)
-- [ ] Tab only visible if user has weekly tasks
-
-### Iteration 9 — Stats & Weekly Review
-- [ ] Horizontal scrollable heatmap matrix (deeds × days)
-- [ ] Summary chart on top
-- [ ] Configurable week start day
 
 ### Iteration 10 — Presets & Onboarding
 - [ ] Preset bundles (سنة ١, سنة ٢-٣, advanced) from the PDF levels
@@ -256,4 +273,6 @@ Based on [UX spec](superpowers/specs/2026-06-11-ux-discussion-summary.md) and [A
 - [ ] 7-day streak row
 
 ### Future Phase
+- [ ] Iteration 8 — Week Screen (Weekly-anytime deeds tab)
+- [ ] Iteration 9 — Stats & Weekly Review (Heatmap matrix & summary chart)
 - [ ] Mentorship mode (Sheikh & Students)

@@ -50,9 +50,11 @@ export function Drawer({ visible, onClose }: DrawerProps) {
           </View>
 
           <View style={styles.menu}>
+            {/* Hide Statistics for release (deferred to future work)
             <Pressable style={styles.menuItem} onPress={() => {}}>
               <Text style={styles.menuItemText}>{ar.drawer.stats}</Text>
             </Pressable>
+            */}
             <Pressable
               style={styles.menuItem}
               onPress={() => {

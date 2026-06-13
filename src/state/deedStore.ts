@@ -1,4 +1,4 @@
-import { and, eq, inArray, lte, or, isNull, gt, sql } from 'drizzle-orm';
+import { and, eq, inArray, lte, or, isNull, gt, sql, asc } from 'drizzle-orm';
 import { useMemo } from 'react';
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
 import { db } from '@/db/client';
@@ -17,7 +17,7 @@ export const localLogId = (date: string, refId: string) => `${date}:${refId}`;
 export async function setDeedLog(
   date: string,
   deedId: string,
-  status: 'done' | 'not_yet',
+  status: 'done' | 'not_yet' | 'not_done',
   value: number | null = null,
   note: string | null = null
 ): Promise<void> {
@@ -371,10 +371,11 @@ export function useDatesPercentages(dates: string[]): Record<string, number> {
  * Creates a new custom Dhikr counter locally, marked as dirty.
  */
 
-export async function addDhikrCounter(name: string, targetVal: number | null = null): Promise<void> {
+export async function addDhikrCounter(name: string, targetVal: number | null = null): Promise<string> {
   const now = Date.now();
   const userId = user$.get()?.id ?? null;
   const today = todayKey();
+  const id = Crypto.randomUUID();
 
   // Get next sort order
   const existing = await db
@@ -384,7 +385,7 @@ export async function addDhikrCounter(name: string, targetVal: number | null = n
   const nextSort = (existing[0] as any)?.count ?? 0;
 
   await db.insert(dhikrs).values({
-    id: Crypto.randomUUID(),
+    id,
     userId,
     name,
     sortOrder: nextSort,
@@ -396,6 +397,7 @@ export async function addDhikrCounter(name: string, targetVal: number | null = n
   });
 
   scheduleSync();
+  return id;
 }
 
 /**
@@ -610,5 +612,49 @@ export function useDeedDefinitions(): DeedDefinitionRow[] {
   return useMemo(() => {
     return data ?? [];
   }, [data]);
+}
+
+/**
+ * Reactive: Returns the date string of the oldest logged deed or active dhikr count in the database.
+ */
+export function useOldestLogDate(): string | null {
+  const { data: deedLogData } = useLiveQuery(
+    db
+      .select({ date: deedLogs.date })
+      .from(deedLogs)
+      .where(
+        and(
+          eq(deedLogs.deleted, false),
+          or(
+            inArray(deedLogs.status, ['done', 'not_done']),
+            gt(deedLogs.value, 0)
+          )
+        )
+      )
+      .orderBy(asc(deedLogs.date))
+      .limit(1)
+  );
+
+  const { data: dhikrLogData } = useLiveQuery(
+    db
+      .select({ date: dhikrLogs.date })
+      .from(dhikrLogs)
+      .where(
+        and(
+          eq(dhikrLogs.deleted, false),
+          gt(dhikrLogs.count, 0)
+        )
+      )
+      .orderBy(asc(dhikrLogs.date))
+      .limit(1)
+  );
+
+  return useMemo(() => {
+    const oldestDeedDate = deedLogData?.[0]?.date ?? null;
+    const oldestDhikrDate = dhikrLogData?.[0]?.date ?? null;
+    if (!oldestDeedDate) return oldestDhikrDate;
+    if (!oldestDhikrDate) return oldestDeedDate;
+    return oldestDeedDate < oldestDhikrDate ? oldestDeedDate : oldestDhikrDate;
+  }, [deedLogData, dhikrLogData]);
 }
 

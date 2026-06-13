@@ -14,7 +14,7 @@ export const ar = {
   drawer: { stats: 'الإحصائيات', settings: 'تعديل الجدول والعبادات', account: 'الحساب', version: 'الإصدار ' },
   tabs: { day: 'اليوم', week: 'الأسبوع', counters: 'الأذكار' },
   days: { today: 'اليوم', yesterday: 'أمس' },
-  summary: { completed: 'صلوات مكتملة' },
+  summary: { completed: 'صلوات مكتملة', completedSection: 'تم إنجازها / تجاوزها' },
   header: { score: 'الدرجة' },
   counters: {
     title: 'الأذكار المطلقة',
@@ -65,6 +65,8 @@ export const ar = {
       deleteConfirm: 'هل أنت متأكد من حذف هذه العبادة؟ سيتم إزالتها من جدولك اليومي.',
       placeholderName: 'مثال: قراءة سورة الملك، صلاة الضحى...',
       noDeeds: 'لا توجد عبادات مضافة في هذا القسم حاليًا.',
+      saveSuccessTitle: 'تمت الإضافة بنجاح',
+      saveSuccessBody: 'تمت إضافة عبادة "{name}" بنجاح. ستظهر في جدولك أول مرة يوم {date} ({schedule}).',
     },
     dhikrs: {
       add: 'إضافة ذكر جديد',
