@@ -8,6 +8,9 @@ export const deedDefinitions = sqliteTable('deed_definitions', {
   name: text('name').notNull(),
   type: text('type').notNull(), // 'boolean' | 'measured'
   defaultSchedule: text('default_schedule').notNull(), // 'daily' | 'weekdays' | etc.
+  defaultSectionId: text('default_section_id').notNull().default('sec_morning'),
+  bundleId: text('bundle_id'),
+  linkedDhikrTemplate: text('linked_dhikr_template'), // JSON string { name: string, target: number }
   payload: text('payload'), // JSON string containing additional info
 });
 

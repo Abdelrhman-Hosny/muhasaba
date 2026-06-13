@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,7 @@ import {
   Switch,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRouter, Stack } from 'expo-router';
+import { useRouter, Stack, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
 import { db } from '@/db/client';
@@ -61,6 +61,7 @@ function getPresetSectionId(presetId: string): string {
 export default function SettingsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const params = useLocalSearchParams();
 
   // Active Tab: deeds (العبادات) or dhikrs (الأذكار)
   const [activeTab, setActiveTab] = useState<'deeds' | 'dhikrs'>('deeds');
@@ -123,6 +124,22 @@ export default function SettingsScreen() {
   const [dhikrName, setDhikrName] = useState('');
   const [dhikrTarget, setDhikrTarget] = useState('');
 
+  useEffect(() => {
+    if (params.openCustomDeedModal === 'true') {
+      setDeedEditId(null);
+      setDeedName('');
+      setDeedSectionId(sectionsList[0]?.id || 'sec_morning');
+      setDeedType('boolean');
+      setDeedTarget('');
+      setShowTargetInput(false);
+      setSelectedDays([0, 1, 2, 3, 4, 5, 6]);
+      setDeedLinkedDhikrId(null);
+      setDeedDefinitionId(null);
+      setDeedModalVisible(true);
+      router.setParams({ openCustomDeedModal: '' });
+    }
+  }, [params.openCustomDeedModal, sectionsList, router]);
+
   // Day toggle handler
   const handleToggleDay = (dayIndex: number) => {
     if (selectedDays.includes(dayIndex)) {
@@ -134,18 +151,17 @@ export default function SettingsScreen() {
     }
   };
 
-  // Open Add Deed Modal
+  const handleCloseDeedModal = () => {
+    setDeedModalVisible(false);
+    if (params.returnToLibrary === 'true') {
+      router.setParams({ returnToLibrary: '', openCustomDeedModal: '' });
+      router.back();
+    }
+  };
+
+  // Open Add Deed Modal (Navigates to Library instead)
   const handleOpenAddDeed = () => {
-    setDeedEditId(null);
-    setDeedName('');
-    setDeedSectionId(sectionsList[0]?.id || 'sec_morning');
-    setDeedType('boolean');
-    setDeedTarget('');
-    setShowTargetInput(false);
-    setSelectedDays([0, 1, 2, 3, 4, 5, 6]);
-    setDeedLinkedDhikrId(null);
-    setDeedDefinitionId(null);
-    setDeedModalVisible(true);
+    router.push('/library');
   };
 
   // Open Edit Deed Modal
@@ -226,7 +242,7 @@ export default function SettingsScreen() {
           deedDefinitionId
         );
       }
-      setDeedModalVisible(false);
+      handleCloseDeedModal();
     } catch (err) {
       console.error(err);
       Alert.alert('خطأ', 'فشل حفظ العبادة');
@@ -485,7 +501,7 @@ export default function SettingsScreen() {
         animationType="slide"
         transparent={true}
         visible={deedModalVisible}
-        onRequestClose={() => setDeedModalVisible(false)}
+        onRequestClose={handleCloseDeedModal}
       >
         <View style={styles.modalOverlay}>
           <View style={[styles.modalCard, { paddingBottom: insets.bottom + 24 }]}>
@@ -498,36 +514,7 @@ export default function SettingsScreen() {
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
             >
-              {/* Suggested Presets */}
-              {!deedEditId && suggestedPresets.length > 0 && (
-                <View style={styles.formGroup}>
-                  <Text style={styles.formLabel}>عبادات مقترحة</Text>
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalChips} style={{ width: '100%', alignSelf: 'stretch' }}>
-                    {suggestedPresets.map((preset) => (
-                      <Pressable
-                        key={preset.id}
-                        testID={`preset-chip-${preset.id}`}
-                        onPress={() => {
-                          setDeedName(preset.name);
-                          setDeedType(preset.type as DeedType);
-                          setDeedSectionId(getPresetSectionId(preset.id));
-                          setDeedDefinitionId(preset.id);
-                          if (preset.type === 'measured') {
-                            setDeedTarget(preset.id === 'quran_reading' ? '10' : '100');
-                            setShowTargetInput(true);
-                          } else {
-                            setDeedTarget('');
-                            setShowTargetInput(false);
-                          }
-                        }}
-                        style={styles.chip}
-                      >
-                        <Text style={styles.chipText}>{preset.name}</Text>
-                      </Pressable>
-                    ))}
-                  </ScrollView>
-                </View>
-              )}
+              {/* Suggested Presets have been moved to the Deeds Library screen */}
 
               {/* Deed Name */}
               <View style={styles.formGroup}>
@@ -681,7 +668,7 @@ export default function SettingsScreen() {
               <Pressable style={styles.modalSaveBtn} onPress={handleSaveDeed} testID="btn-save-deed">
                 <Text style={styles.modalSaveText}>{ar.settings.save}</Text>
               </Pressable>
-              <Pressable style={styles.modalCancelBtn} onPress={() => setDeedModalVisible(false)} testID="btn-cancel-deed">
+              <Pressable style={styles.modalCancelBtn} onPress={handleCloseDeedModal} testID="btn-cancel-deed">
                 <Text style={styles.modalCancelText}>{ar.settings.cancel}</Text>
               </Pressable>
             </View>

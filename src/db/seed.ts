@@ -29,17 +29,25 @@ export async function seedDatabase() {
 
   // 2. Insert Deed Definitions
   const definitions = [
-    { id: 'fajr', name: 'الفجر', type: 'boolean', defaultSchedule: 'daily' },
-    { id: 'dhuhr', name: 'الظهر', type: 'boolean', defaultSchedule: 'daily' },
-    { id: 'asr', name: 'العصر', type: 'boolean', defaultSchedule: 'daily' },
-    { id: 'maghrib', name: 'المغرب', type: 'boolean', defaultSchedule: 'daily' },
-    { id: 'isha', name: 'العشاء', type: 'boolean', defaultSchedule: 'daily' },
-    { id: 'sunnah_fajr', name: 'سنة الفجر', type: 'boolean', defaultSchedule: 'daily' },
-    { id: 'witr', name: 'الوتر', type: 'boolean', defaultSchedule: 'daily' },
-    { id: 'duha', name: 'الضحى', type: 'boolean', defaultSchedule: 'daily' },
-    { id: 'quran_reading', name: 'ورد التلاوة', type: 'measured', defaultSchedule: 'daily' },
-    { id: 'adhkar_morning', name: 'أذكار الصباح', type: 'boolean', defaultSchedule: 'daily' },
-    { id: 'adhkar_evening', name: 'أذكار المساء', type: 'boolean', defaultSchedule: 'daily' },
+    // 1. الصلوات المكتوبة
+    { id: 'fajr', name: 'الفجر', type: 'boolean', defaultSchedule: 'daily', defaultSectionId: 'sec_morning', bundleId: null, linkedDhikrTemplate: null },
+    { id: 'dhuhr', name: 'الظهر', type: 'boolean', defaultSchedule: 'daily', defaultSectionId: 'sec_dhuhr', bundleId: null, linkedDhikrTemplate: null },
+    { id: 'asr', name: 'العصر', type: 'boolean', defaultSchedule: 'daily', defaultSectionId: 'sec_asr', bundleId: null, linkedDhikrTemplate: null },
+    { id: 'maghrib', name: 'المغرب', type: 'boolean', defaultSchedule: 'daily', defaultSectionId: 'sec_maghrib', bundleId: null, linkedDhikrTemplate: null },
+    { id: 'isha', name: 'العشاء', type: 'boolean', defaultSchedule: 'daily', defaultSectionId: 'sec_isha_night', bundleId: null, linkedDhikrTemplate: null },
+
+    // 2. السنن الرواتب
+    { id: 'sunnah_fajr', name: 'سنة الفجر (ركعتان)', type: 'boolean', defaultSchedule: 'daily', defaultSectionId: 'sec_morning', bundleId: 'bundle_rawateb', linkedDhikrTemplate: null },
+    { id: 'sunnah_dhuhr_before', name: 'سنة الظهر القبلية (4 ركعات)', type: 'boolean', defaultSchedule: 'daily', defaultSectionId: 'sec_dhuhr', bundleId: 'bundle_rawateb', linkedDhikrTemplate: null },
+    { id: 'sunnah_dhuhr_after', name: 'سنة الظهر البعدية (ركعتان)', type: 'boolean', defaultSchedule: 'daily', defaultSectionId: 'sec_dhuhr', bundleId: 'bundle_rawateb', linkedDhikrTemplate: null },
+    { id: 'sunnah_maghrib', name: 'سنة المغرب (ركعتان)', type: 'boolean', defaultSchedule: 'daily', defaultSectionId: 'sec_maghrib', bundleId: 'bundle_rawateb', linkedDhikrTemplate: null },
+    { id: 'sunnah_isha', name: 'سنة العشاء (ركعتان)', type: 'boolean', defaultSchedule: 'daily', defaultSectionId: 'sec_isha_night', bundleId: 'bundle_rawateb', linkedDhikrTemplate: null },
+
+    // 3. الصيام
+    { id: 'fasting_mon_thu', name: 'صيام الإثنين والخميس', type: 'boolean', defaultSchedule: 'mon,thu', defaultSectionId: 'sec_morning', bundleId: null, linkedDhikrTemplate: null },
+
+    // 4. الأذكار (Istighfar Only)
+    { id: 'dhikr_istighfar_lib', name: 'الاستغفار (100 مرة)', type: 'boolean', defaultSchedule: 'daily', defaultSectionId: 'sec_morning', bundleId: null, linkedDhikrTemplate: JSON.stringify({ name: 'استغفار', target: 100 }) },
   ];
 
   for (const def of definitions) {
@@ -77,27 +85,20 @@ export async function seedDatabase() {
   const defaultDeeds = [
     // Morning Section (الصبح)
     { id: 'deed_fajr', definitionId: 'fajr', sectionId: 'sec_morning', name: 'صلاة الفجر', type: 'boolean', schedule: 'daily', createdAt: todayStr, sortOrder: 1, updatedAt: Date.now() },
-    { id: 'deed_sunnah_fajr', definitionId: 'sunnah_fajr', sectionId: 'sec_morning', name: 'سنة الفجر', type: 'boolean', schedule: 'daily', createdAt: todayStr, sortOrder: 2, updatedAt: Date.now() },
-    { id: 'deed_adhkar_morning', definitionId: 'adhkar_morning', sectionId: 'sec_morning', name: 'أذكار الصباح', type: 'boolean', schedule: 'daily', createdAt: todayStr, sortOrder: 3, updatedAt: Date.now() },
-    { id: 'deed_istighfar_100', definitionId: null, sectionId: 'sec_morning', name: 'الاستغفار (100 مرة)', type: 'boolean', schedule: 'daily', createdAt: todayStr, sortOrder: 4, linkedDhikrId: 'dhikr_istighfar', target: 100, updatedAt: Date.now() },
+    { id: 'deed_sunnah_fajr', definitionId: 'sunnah_fajr', sectionId: 'sec_morning', name: 'سنة الفجر (ركعتان)', type: 'boolean', schedule: 'daily', createdAt: todayStr, sortOrder: 2, updatedAt: Date.now() },
+    { id: 'deed_istighfar_100', definitionId: 'dhikr_istighfar_lib', sectionId: 'sec_morning', name: 'الاستغفار (100 مرة)', type: 'boolean', schedule: 'daily', createdAt: todayStr, sortOrder: 4, linkedDhikrId: 'dhikr_istighfar', target: 100, updatedAt: Date.now() },
 
     // Dhuhr Section (الظهر)
     { id: 'deed_dhuhr', definitionId: 'dhuhr', sectionId: 'sec_dhuhr', name: 'صلاة الظهر', type: 'boolean', schedule: 'daily', createdAt: todayStr, sortOrder: 1, updatedAt: Date.now() },
-    { id: 'deed_duha', definitionId: 'duha', sectionId: 'sec_dhuhr', name: 'صلاة الضحى', type: 'boolean', schedule: 'daily', createdAt: todayStr, sortOrder: 2, updatedAt: Date.now() },
 
     // Asr Section (العصر)
     { id: 'deed_asr', definitionId: 'asr', sectionId: 'sec_asr', name: 'صلاة العصر', type: 'boolean', schedule: 'daily', createdAt: todayStr, sortOrder: 1, updatedAt: Date.now() },
 
     // Maghrib Section (المغرب)
     { id: 'deed_maghrib', definitionId: 'maghrib', sectionId: 'sec_maghrib', name: 'صلاة المغرب', type: 'boolean', schedule: 'daily', createdAt: todayStr, sortOrder: 1, updatedAt: Date.now() },
-    { id: 'deed_adhkar_evening', definitionId: 'adhkar_evening', sectionId: 'sec_maghrib', name: 'أذكار المساء', type: 'boolean', schedule: 'daily', createdAt: todayStr, sortOrder: 2, updatedAt: Date.now() },
 
     // Isha & Night Section (العشاء والليل)
     { id: 'deed_isha', definitionId: 'isha', sectionId: 'sec_isha_night', name: 'صلاة العشاء', type: 'boolean', schedule: 'daily', createdAt: todayStr, sortOrder: 1, updatedAt: Date.now() },
-    { id: 'deed_witr', definitionId: 'witr', sectionId: 'sec_isha_night', name: 'صلاة الوتر', type: 'boolean', schedule: 'daily', createdAt: todayStr, sortOrder: 2, updatedAt: Date.now() },
-
-    // Quran Section (القرآن الكريم)
-    { id: 'deed_quran', definitionId: 'quran_reading', sectionId: 'sec_quran', name: 'ورد تلاوة القرآن', type: 'measured', schedule: 'daily', createdAt: todayStr, sortOrder: 1, target: 10, updatedAt: Date.now() },
   ];
 
   for (const deed of defaultDeeds) {
