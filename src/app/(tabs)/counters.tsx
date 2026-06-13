@@ -72,8 +72,8 @@ export default function CountersScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.bg, paddingTop: insets.top }}>
       {/* Header */}
-      <View style={{ flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'space-between', padding: 16 }}>
-        <View style={{ flexDirection: 'row-reverse', alignItems: 'center', gap: 12 }}>
+      <View style={{ flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse', alignItems: 'center', justifyContent: 'space-between', padding: 16 }}>
+        <View style={{ flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse', alignItems: 'center', gap: 12 }}>
           <Text style={{ color: theme.colors.text, fontFamily: theme.font, fontSize: 20, fontWeight: 'bold' }}>
             {ar.counters.title}
           </Text>
@@ -82,7 +82,7 @@ export default function CountersScreen() {
             hitSlop={8}
             onPress={() => setModalVisible(true)}
             style={{
-              flexDirection: 'row-reverse',
+              flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse',
               alignItems: 'center',
               gap: 4,
               backgroundColor: theme.colors.translucentBgActive,
@@ -127,7 +127,7 @@ export default function CountersScreen() {
                 testID={`counter-row-${dhikr.id}`}
                 onPress={() => setSelectedId(dhikr.id)}
                 style={{
-                  flexDirection: 'row-reverse',
+                  flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse',
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   backgroundColor: active ? theme.colors.surfaceDone : theme.colors.surface,
@@ -139,11 +139,11 @@ export default function CountersScreen() {
                   elevation: active ? 1 : 0,
                 }}
               >
-                <View style={{ flexDirection: 'column', alignItems: 'flex-end', flex: 1, paddingRight: 8 }}>
+                <View style={{ flexDirection: 'column', alignItems: I18nManager.isRTL ? 'flex-start' : 'flex-end', flex: 1, paddingRight: I18nManager.isRTL ? 0 : 8, paddingLeft: I18nManager.isRTL ? 8 : 0 }}>
                   <Text style={{ color: theme.colors.text, fontFamily: theme.font, fontSize: 18, fontWeight: 'bold' }}>
                     {dhikr.name}
                   </Text>
-                  <View style={{ flexDirection: 'row-reverse', alignItems: 'center', gap: 6, marginTop: 4 }}>
+                  <View style={{ flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse', alignItems: 'center', gap: 6, marginTop: 4 }}>
                     <Text style={{ color: completed ? theme.colors.primary : theme.colors.muted, fontFamily: theme.font, fontSize: 14 }}>
                       {`\u200E${toArabicNumeral(count)}${hasTarget ? ` / ${toArabicNumeral(target ?? 0)}` : ''}`}
                     </Text>
@@ -184,7 +184,7 @@ export default function CountersScreen() {
           }}
         >
           {/* Keypad Grid */}
-          <View style={{ flexDirection: 'row-reverse', gap: 10, marginBottom: 10 }}>
+          <View style={{ flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse', gap: 10, marginBottom: 10 }}>
             {[1, 5, 10].map((amount) => {
               return (
                 <Pressable
@@ -210,7 +210,7 @@ export default function CountersScreen() {
             })}
           </View>
 
-          <View style={{ flexDirection: 'row-reverse', gap: 10, marginBottom: 12 }}>
+          <View style={{ flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse', gap: 10, marginBottom: 12 }}>
             {[25, 50, 100].map((amount) => {
               return (
                 <Pressable
@@ -237,9 +237,9 @@ export default function CountersScreen() {
           </View>
 
           {/* Custom entry & Mode / Reset */}
-          <View style={{ flexDirection: 'row-reverse', alignItems: 'center', gap: 10 }}>
+          <View style={{ flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse', alignItems: 'center', gap: 10 }}>
             {/* Custom Input */}
-            <View style={{ flex: 1.8, height: 48, flexDirection: 'row-reverse', alignItems: 'center', backgroundColor: theme.colors.translucentBgActive, borderRadius: 12, paddingHorizontal: 12 }}>
+            <View style={{ flex: 1.8, height: 48, flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse', alignItems: 'center', backgroundColor: theme.colors.translucentBgActive, borderRadius: 12, paddingHorizontal: 12 }}>
               <TextInput
                 testID="input-custom-count"
                 placeholder={ar.counters.custom}
@@ -254,7 +254,7 @@ export default function CountersScreen() {
                   flex: 1,
                   fontSize: 16,
                   color: theme.colors.text,
-                  textAlign: I18nManager.isRTL ? 'right' : 'left',
+                  textAlign: I18nManager.isRTL ? 'left' : 'right',
                   height: '100%',
                 }}
               />
@@ -274,7 +274,7 @@ export default function CountersScreen() {
             </View>
 
             {/* Mode Toggle Segmented */}
-            <View style={{ flex: 1.2, height: 48, flexDirection: 'row-reverse', backgroundColor: theme.colors.translucentBgActive, borderRadius: 12, padding: 3 }}>
+            <View style={{ flex: 1.2, height: 48, flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse', backgroundColor: theme.colors.translucentBgActive, borderRadius: 12, padding: 3 }}>
               <Pressable
                 testID="btn-mode-add"
                 onPress={() => setMode('add')}
