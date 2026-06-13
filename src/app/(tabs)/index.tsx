@@ -58,14 +58,14 @@ export default function DayScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.bg, paddingTop: insets.top }}>
-      {/* Header: ☰  App Name */}
+      {/* Header: App Name  ☰ */}
       <View style={{ flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse', alignItems: 'center', justifyContent: 'space-between', padding: 16 }}>
-        <Text style={{ color: theme.colors.text, fontFamily: theme.fontBold, fontSize: 20 }}>
-          {ar.appName}
-        </Text>
         <Pressable hitSlop={8} onPress={() => setDrawerVisible(true)}>
           <Ionicons name="menu-outline" size={26} color={theme.colors.muted} />
         </Pressable>
+        <Text style={{ color: theme.colors.text, fontFamily: theme.fontBold, fontSize: 20 }}>
+          {ar.appName}
+        </Text>
       </View>
 
       {/* Day strip: today (right) → oldest (left) */}

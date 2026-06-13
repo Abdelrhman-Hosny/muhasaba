@@ -73,6 +73,9 @@ export default function CountersScreen() {
     <View style={{ flex: 1, backgroundColor: theme.colors.bg, paddingTop: insets.top }}>
       {/* Header */}
       <View style={{ flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse', alignItems: 'center', justifyContent: 'space-between', padding: 16 }}>
+        <Pressable testID="btn-drawer-toggle" hitSlop={8} onPress={() => setDrawerVisible(true)}>
+          <Ionicons name="menu-outline" size={26} color={theme.colors.muted} />
+        </Pressable>
         <View style={{ flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse', alignItems: 'center', gap: 12 }}>
           <Text style={{ color: theme.colors.text, fontFamily: theme.font, fontSize: 20, fontWeight: 'bold' }}>
             {ar.counters.title}
@@ -97,9 +100,6 @@ export default function CountersScreen() {
             </Text>
           </Pressable>
         </View>
-        <Pressable testID="btn-drawer-toggle" hitSlop={8} onPress={() => setDrawerVisible(true)}>
-          <Ionicons name="menu-outline" size={26} color={theme.colors.muted} />
-        </Pressable>
       </View>
 
       {/* Split view list (Scrollable) */}
