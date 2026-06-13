@@ -175,6 +175,38 @@ Based on [UX spec](superpowers/specs/2026-06-11-ux-discussion-summary.md) and [A
 
 ---
 
+## ✅ Premium Dynamic Theme, Drawer Selector & Section Renaming (2026-06-13)
+
+### Premium Dynamic Themes
+- [x] Defined strict `AppTheme` typescript interface in `src/ui/theme.ts` and enforced on `lightTheme` and `darkTheme`
+- [x] Refactored all layout files, screens, and components to retrieve active theme settings reactively via `useTheme()` hook
+- [x] Configured persistent theme preference storage in MMKV under key `themeMode` with reactive observables
+
+### Side Drawer improvements
+- [x] Replaced the simple text cycle toggle with a premium segmented theme selector card featuring active theme icons (`sunny-outline`, `moon-outline`, `contrast-outline`)
+- [x] Renamed the drawer settings entry to `'تعديل الجدول والعبادات'` (Edit Schedule & Worships) to signify editing
+- [x] Replaced `'القرآن الكريم'` section in the database seeding and migrations with `'أعمال على مدار اليوم'` (Things to do throughout the day)
+
+### Housekeeping & Tests
+- [x] Cleaned up unused styles and imports from `settings.tsx`
+- [x] Updated settings tests in `settings.test.tsx` to dynamically query navigation parameters and mock local search params
+- [x] Updated counters drawer test assertion in `counters.test.tsx` to match the renamed drawer item name
+- [x] Verified all 36 Jest unit tests compile and run green successfully
+
+### Files touched
+| Action | File |
+|---|---|
+| Modified | `src/ui/components/Drawer.tsx` |
+| Modified | `src/ui/theme.ts` |
+| Modified | `src/app/settings.tsx` |
+| Modified | `src/i18n/ar.ts` |
+| Modified | `src/db/seed.ts` |
+| Modified | `src/db/schema.ts` |
+| Modified | `__tests__/ui/settings.test.tsx` |
+| Modified | `__tests__/ui/counters.test.tsx` |
+
+---
+
 ## 🔲 Remaining Work (by priority)
 
 ### Iteration 3 — Day Screen Polish

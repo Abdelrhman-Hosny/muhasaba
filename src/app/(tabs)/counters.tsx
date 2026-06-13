@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { View, Text, Pressable, ScrollView, TextInput, Modal, I18nManager } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { theme } from '@/ui/theme';
+import { useTheme } from '@/ui/theme';
 import { ar } from '@/i18n/ar';
 import { toArabicNumeral } from '@/i18n/format';
 import { useDhikrs, incrementDhikrCount, addDhikrCounter, deleteDhikrCounter } from '@/state/deedStore';
@@ -10,6 +10,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Drawer } from '@/ui/components/Drawer';
 
 export default function CountersScreen() {
+  const theme = useTheme();
   const insets = useSafeAreaInsets();
   const today = todayKey();
   const dhikrsList = useDhikrs(today);
@@ -84,7 +85,7 @@ export default function CountersScreen() {
               flexDirection: 'row-reverse',
               alignItems: 'center',
               gap: 4,
-              backgroundColor: 'rgba(255,255,255,0.05)',
+              backgroundColor: theme.colors.translucentBgActive,
               paddingVertical: 6,
               paddingHorizontal: 10,
               borderRadius: 12,
@@ -176,7 +177,7 @@ export default function CountersScreen() {
         <View
           style={{
             borderTopWidth: 1,
-            borderTopColor: 'rgba(0,0,0,0.08)',
+            borderTopColor: theme.colors.translucentBorderStrong,
             padding: 16,
             paddingBottom: insets.bottom + 16,
             backgroundColor: theme.colors.surface,
@@ -238,10 +239,11 @@ export default function CountersScreen() {
           {/* Custom entry & Mode / Reset */}
           <View style={{ flexDirection: 'row-reverse', alignItems: 'center', gap: 10 }}>
             {/* Custom Input */}
-            <View style={{ flex: 1.8, height: 48, flexDirection: 'row-reverse', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 12, paddingHorizontal: 12 }}>
+            <View style={{ flex: 1.8, height: 48, flexDirection: 'row-reverse', alignItems: 'center', backgroundColor: theme.colors.translucentBgActive, borderRadius: 12, paddingHorizontal: 12 }}>
               <TextInput
                 testID="input-custom-count"
                 placeholder={ar.counters.custom}
+                placeholderTextColor={theme.colors.placeholderText}
                 keyboardType="number-pad"
                 value={customValue}
                 onChangeText={(text) => setCustomValue(text.replace(/[^0-9]/g, ''))}
@@ -272,7 +274,7 @@ export default function CountersScreen() {
             </View>
 
             {/* Mode Toggle Segmented */}
-            <View style={{ flex: 1.2, height: 48, flexDirection: 'row-reverse', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 12, padding: 3 }}>
+            <View style={{ flex: 1.2, height: 48, flexDirection: 'row-reverse', backgroundColor: theme.colors.translucentBgActive, borderRadius: 12, padding: 3 }}>
               <Pressable
                 testID="btn-mode-add"
                 onPress={() => setMode('add')}
@@ -340,7 +342,7 @@ export default function CountersScreen() {
             flex: 1,
             justifyContent: 'center',
             alignItems: 'center',
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            backgroundColor: theme.colors.overlayBg,
           }}
         >
           <View
@@ -373,13 +375,14 @@ export default function CountersScreen() {
             <TextInput
               testID="input-new-name"
               placeholder={ar.counters.name}
+              placeholderTextColor={theme.colors.placeholderText}
               value={newName}
               onChangeText={setNewName}
               style={{
                 fontFamily: theme.font,
                 width: '100%',
                 height: 48,
-                backgroundColor: 'rgba(255,255,255,0.05)',
+                backgroundColor: theme.colors.translucentBgActive,
                 borderRadius: 12,
                 paddingHorizontal: 16,
                 fontSize: 16,
@@ -393,6 +396,7 @@ export default function CountersScreen() {
             <TextInput
               testID="input-new-target"
               placeholder={ar.counters.targetOptional}
+              placeholderTextColor={theme.colors.placeholderText}
               keyboardType="number-pad"
               value={newTarget}
               onChangeText={(text) => setNewTarget(text.replace(/[^0-9]/g, ''))}
@@ -400,7 +404,7 @@ export default function CountersScreen() {
                 fontFamily: theme.font,
                 width: '100%',
                 height: 48,
-                backgroundColor: 'rgba(255,255,255,0.05)',
+                backgroundColor: theme.colors.translucentBgActive,
                 borderRadius: 12,
                 paddingHorizontal: 16,
                 fontSize: 16,
@@ -436,7 +440,7 @@ export default function CountersScreen() {
                   flex: 1,
                   height: 48,
                   borderRadius: 12,
-                  backgroundColor: 'rgba(255,255,255,0.05)',
+                  backgroundColor: theme.colors.translucentBg,
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}

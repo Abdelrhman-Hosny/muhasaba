@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TextInput, ScrollView, Pressable, I18nManager }
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { theme } from '@/ui/theme';
+import { useTheme, ThemeType } from '@/ui/theme';
 import { useDeedDefinitions, useScorecardStructure, addDeed, addDhikrCounter, DhikrRow } from '@/state/deedStore';
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
 import { db } from '@/db/client';
@@ -20,6 +20,8 @@ export default function DeedsLibraryScreen() {
   const insets = useSafeAreaInsets();
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedBundles, setExpandedBundles] = useState<Set<string>>(new Set());
+  const theme = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
 
   const definitions = useDeedDefinitions();
   const scorecardStructure = useScorecardStructure();
@@ -58,74 +60,75 @@ export default function DeedsLibraryScreen() {
   }, [definitions]);
 
   // Search filtering logic
-  const filteredBundles = useMemo(() => {
-    if (!searchQuery) return bundles;
-    const q = searchQuery.toLowerCase();
-    const result = new Map<string, typeof definitions>();
-    
-    for (const [bId, items] of bundles.entries()) {
-      // If any item matches the search, include the bundle
-      const matches = items.filter(i => i.name.toLowerCase().includes(q));
-      if (matches.length > 0) {
-        result.set(bId, items);
-        // Auto-expand bundle if searching
-        setExpandedBundles(prev => new Set(prev).add(bId));
+  const { filteredBundles, filteredStandalone } = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return { filteredBundles: bundles, filteredStandalone: standalone };
+
+    const fBundles = new Map<string, typeof definitions>();
+    const fStandalone: typeof definitions = [];
+
+    for (const [bundleId, items] of bundles.entries()) {
+      const filteredItems = items.filter(item => item.name.toLowerCase().includes(query));
+      if (filteredItems.length > 0) {
+        fBundles.set(bundleId, filteredItems);
       }
     }
-    return result;
-  }, [searchQuery, bundles]);
 
-  const filteredStandalone = useMemo(() => {
-    if (!searchQuery) return standalone;
-    const q = searchQuery.toLowerCase();
-    return standalone.filter(i => i.name.toLowerCase().includes(q));
-  }, [searchQuery, standalone]);
+    const filteredStand = standalone.filter(item => item.name.toLowerCase().includes(query));
+
+    return { filteredBundles: fBundles, filteredStandalone: filteredStand };
+  }, [searchQuery, bundles, standalone]);
 
   const toggleBundleExpand = (bundleId: string) => {
-    setExpandedBundles(prev => {
-      const next = new Set(prev);
-      if (next.has(bundleId)) next.delete(bundleId);
-      else next.add(bundleId);
-      return next;
-    });
-  };
-
-  const handleAddDeed = async (def: any) => {
-    let linkedDhikrId = null;
-
-    // Check if this deed requires a linked dhikr
-    if (def.linkedDhikrTemplate) {
-      const template = JSON.parse(def.linkedDhikrTemplate);
-      const existingDhikr = rawDhikrs?.find(d => d.name === template.name);
-      
-      if (existingDhikr) {
-        linkedDhikrId = existingDhikr.id;
-      } else {
-        await addDhikrCounter(template.name, template.target);
-        
-        // Let's query immediately. 
-        // Note: SQLite is fast, so this usually finds it.
-        const newlyCreated = await db.select().from(dhikrs).where(eq(dhikrs.name, template.name)).limit(1);
-        if (newlyCreated.length > 0) {
-          linkedDhikrId = newlyCreated[0].id;
-        }
-      }
+    const next = new Set(expandedBundles);
+    if (next.has(bundleId)) {
+      next.delete(bundleId);
+    } else {
+      next.add(bundleId);
     }
-
-    await addDeed(
-      def.name,
-      def.defaultSectionId,
-      def.type as 'boolean' | 'measured',
-      def.defaultSchedule,
-      linkedDhikrId ? JSON.parse(def.linkedDhikrTemplate).target : null,
-      linkedDhikrId,
-      def.id
-    );
+    setExpandedBundles(next);
   };
 
   const getBundleName = (bundleId: string) => {
-    if (bundleId === 'bundle_rawateb') return 'السنن الرواتب (12 ركعة)';
+    if (bundleId === 'rawateb') return 'سنن الرواتب';
+    if (bundleId === 'prayers') return 'الصلوات الخمس';
     return bundleId;
+  };
+
+  const handleAddDeed = async (item: typeof definitions[0]) => {
+    // 1. If definition has linkedDhikrTemplate, check if we need to create/activate a dhikr
+    let linkedDhikrId: string | undefined = undefined;
+
+    if (item.linkedDhikrTemplate) {
+      try {
+        const template = JSON.parse(item.linkedDhikrTemplate) as { name: string; target: number };
+        
+        // Find existing non-deleted dhikr with same name
+        const existing = (rawDhikrs as DhikrRow[] | undefined)?.find(
+          d => d.name === template.name
+        );
+
+        if (existing) {
+          linkedDhikrId = existing.id;
+        } else {
+          // Create new dhikr counter
+          linkedDhikrId = await addDhikrCounter(template.name, template.target);
+        }
+      } catch (err) {
+        console.error('Failed to parse linkedDhikrTemplate', err);
+      }
+    }
+
+    // 2. Add deed to the database scorecard
+    await addDeed({
+      definitionId: item.id,
+      name: item.name,
+      type: item.type as 'boolean' | 'measured',
+      sectionId: item.defaultSectionId,
+      schedule: item.defaultSchedule,
+      target: item.linkedDhikrTemplate ? (JSON.parse(item.linkedDhikrTemplate) as { target: number }).target : undefined,
+      linkedDhikrId,
+    });
   };
 
   return (
@@ -141,17 +144,17 @@ export default function DeedsLibraryScreen() {
 
       {/* Search Bar */}
       <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color="rgba(255,255,255,0.5)" />
+        <Ionicons name="search" size={20} color={theme.colors.placeholderText} />
         <TextInput
           style={styles.searchInput}
           placeholder="ابحث عن عبادة (مثال: الفجر)..."
-          placeholderTextColor="rgba(255,255,255,0.5)"
+          placeholderTextColor={theme.colors.placeholderText}
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
         {searchQuery.length > 0 && (
           <Pressable onPress={() => setSearchQuery('')}>
-            <Ionicons name="close-circle" size={20} color="rgba(255,255,255,0.5)" />
+            <Ionicons name="close-circle" size={20} color={theme.colors.placeholderText} />
           </Pressable>
         )}
       </View>
@@ -169,7 +172,7 @@ export default function DeedsLibraryScreen() {
             <View key={bundleId} style={styles.bundleContainer}>
               <Pressable style={styles.bundleHeader} onPress={() => toggleBundleExpand(bundleId)}>
                 <View style={styles.bundleTitleRow}>
-                  <Ionicons name={isExpanded ? 'chevron-down' : 'chevron-back'} size={20} color="#fff" />
+                  <Ionicons name={isExpanded ? 'chevron-down' : 'chevron-back'} size={20} color={theme.colors.text} />
                   <Text style={styles.bundleTitle}>{getBundleName(bundleId)}</Text>
                 </View>
                 
@@ -257,151 +260,153 @@ export default function DeedsLibraryScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.bg,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.05)',
-  },
-  closeButton: {
-    padding: 8,
-  },
-  closeText: {
-    color: theme.colors.primary,
-    fontSize: 16,
-    fontFamily: theme.font,
-  },
-  title: {
-    fontSize: 18,
-    color: '#fff',
-    fontFamily: 'Cairo-Bold',
-  },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    margin: 20,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    height: 48,
-  },
-  searchInput: {
-    flex: 1,
-    color: '#fff',
-    fontFamily: theme.font,
-    fontSize: 15,
-    marginHorizontal: 10,
-    textAlign: I18nManager.isRTL ? 'right' : 'left',
-  },
-  content: {
-    flex: 1,
-  },
-  bundleContainer: {
-    marginBottom: 16,
-    marginHorizontal: 20,
-    backgroundColor: 'rgba(255,255,255,0.02)',
-    borderRadius: 16,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.05)',
-  },
-  bundleHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 16,
-    backgroundColor: 'rgba(255,255,255,0.03)',
-  },
-  bundleTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  bundleTitle: {
-    fontSize: 16,
-    color: '#fff',
-    fontFamily: 'Cairo-Bold',
-  },
-  bundleItems: {
-    paddingVertical: 8,
-  },
-  sectionContainer: {
-    marginHorizontal: 20,
-    marginTop: 10,
-  },
-  sectionTitle: {
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.5)',
-    fontFamily: theme.font,
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-  deedItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.05)',
-  },
-  deedName: {
-    fontSize: 15,
-    color: '#fff',
-    fontFamily: theme.font,
-  },
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 6,
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.3)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkboxActive: {
-    backgroundColor: theme.colors.primary,
-    borderColor: theme.colors.primary,
-  },
-  checkboxPartial: {
-    borderColor: theme.colors.primary,
-  },
-  partialDash: {
-    width: 10,
-    height: 2,
-    backgroundColor: theme.colors.primary,
-    borderRadius: 1,
-  },
-  bottomBar: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: 20,
-    backgroundColor: theme.colors.bg,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.05)',
-  },
-  customBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 50,
-    borderRadius: 12,
-    backgroundColor: 'rgba(23, 201, 100, 0.1)',
-    gap: 8,
-  },
-  customBtnText: {
-    color: theme.colors.primary,
-    fontSize: 16,
-    fontFamily: 'Cairo-Bold',
-  },
-});
+function createStyles(theme: ThemeType) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.bg,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 20,
+      paddingVertical: 15,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.translucentBorder,
+    },
+    closeButton: {
+      padding: 8,
+    },
+    closeText: {
+      color: theme.colors.primary,
+      fontSize: 16,
+      fontFamily: theme.font,
+    },
+    title: {
+      fontSize: 18,
+      color: theme.colors.text,
+      fontFamily: theme.fontBold,
+    },
+    searchContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: theme.colors.translucentBg,
+      margin: 20,
+      paddingHorizontal: 16,
+      borderRadius: 12,
+      height: 48,
+    },
+    searchInput: {
+      flex: 1,
+      color: theme.colors.text,
+      fontFamily: theme.font,
+      fontSize: 15,
+      marginHorizontal: 10,
+      textAlign: I18nManager.isRTL ? 'right' : 'left',
+    },
+    content: {
+      flex: 1,
+    },
+    bundleContainer: {
+      marginBottom: 16,
+      marginHorizontal: 20,
+      backgroundColor: theme.colors.translucentBg,
+      borderRadius: 16,
+      overflow: 'hidden',
+      borderWidth: 1,
+      borderColor: theme.colors.translucentBorder,
+    },
+    bundleHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: 16,
+      backgroundColor: theme.colors.translucentBgActive,
+    },
+    bundleTitleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+    },
+    bundleTitle: {
+      fontSize: 16,
+      color: theme.colors.text,
+      fontFamily: theme.fontBold,
+    },
+    bundleItems: {
+      paddingVertical: 8,
+    },
+    sectionContainer: {
+      marginHorizontal: 20,
+      marginTop: 10,
+    },
+    sectionTitle: {
+      fontSize: 14,
+      color: theme.colors.placeholderText,
+      fontFamily: theme.font,
+      marginBottom: 10,
+      textAlign: 'center',
+    },
+    deedItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: 14,
+      paddingHorizontal: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.translucentBorder,
+    },
+    deedName: {
+      fontSize: 15,
+      color: theme.colors.text,
+      fontFamily: theme.font,
+    },
+    checkbox: {
+      width: 24,
+      height: 24,
+      borderRadius: 6,
+      borderWidth: 2,
+      borderColor: theme.colors.translucentBorderStrong,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    checkboxActive: {
+      backgroundColor: theme.colors.primary,
+      borderColor: theme.colors.primary,
+    },
+    checkboxPartial: {
+      borderColor: theme.colors.primary,
+    },
+    partialDash: {
+      width: 10,
+      height: 2,
+      backgroundColor: theme.colors.primary,
+      borderRadius: 1,
+    },
+    bottomBar: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      padding: 20,
+      backgroundColor: theme.colors.bg,
+      borderTopWidth: 1,
+      borderTopColor: theme.colors.translucentBorder,
+    },
+    customBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      height: 50,
+      borderRadius: 12,
+      backgroundColor: theme.colors.translucentPrimary,
+      gap: 8,
+    },
+    customBtnText: {
+      color: theme.colors.primary,
+      fontSize: 16,
+      fontFamily: theme.fontBold,
+    },
+  });
+}

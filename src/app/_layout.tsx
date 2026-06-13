@@ -9,7 +9,8 @@ import migrations from '../../drizzle/migrations';
 import { seedDatabase } from '@/db/seed';
 import { initAuth } from '@/state/auth';
 import { runSync } from '@/state/sync';
-import { theme } from '@/ui/theme';
+import { useTheme } from '@/ui/theme';
+import { StatusBar } from 'expo-status-bar';
 
 if (!I18nManager.isRTL) {
   I18nManager.allowRTL(true);
@@ -17,6 +18,7 @@ if (!I18nManager.isRTL) {
 }
 
 function Centered({ children }: { children: React.ReactNode }) {
+  const theme = useTheme();
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.bg, justifyContent: 'center', alignItems: 'center' }}>
       {children}
@@ -25,6 +27,7 @@ function Centered({ children }: { children: React.ReactNode }) {
 }
 
 export default function RootLayout() {
+  const theme = useTheme();
   const [fontsLoaded] = useFonts({
     Cairo: Cairo_400Regular,
     'Cairo-Bold': Cairo_700Bold,
@@ -52,6 +55,7 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
+      <StatusBar style={theme.statusBar} />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       </Stack>

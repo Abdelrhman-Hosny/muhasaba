@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useSyncExternalStore } from 'react';
 import {
   View,
   Text,
@@ -18,7 +18,7 @@ import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
 import { db } from '@/db/client';
 import { dhikrs } from '@/db/schema';
 import { eq } from 'drizzle-orm';
-import { theme } from '@/ui/theme';
+import { useTheme, ThemeType } from '@/ui/theme';
 import { ar } from '@/i18n/ar';
 import { toArabicNumeral } from '@/i18n/format';
 import {
@@ -62,6 +62,8 @@ export default function SettingsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams();
+  const theme = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
 
   // Active Tab: deeds (العبادات) or dhikrs (الأذكار)
   const [activeTab, setActiveTab] = useState<'deeds' | 'dhikrs'>('deeds');
@@ -479,6 +481,7 @@ export default function SettingsScreen() {
             )}
           </View>
         )}
+
       </ScrollView>
 
       {/* Floating Save/Add Action Bar */}
@@ -734,368 +737,370 @@ export default function SettingsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.bg,
-  },
-  header: {
-    flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.surface,
-  },
-  headerTitle: {
-    color: theme.colors.text,
-    fontFamily: theme.fontBold,
-    fontSize: 20,
-  },
-  backBtn: {
-    position: 'absolute',
-    left: 16,
-  },
-  tabContainer: {
-    flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse',
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderRadius: 12,
-    padding: 4,
-    marginHorizontal: 16,
-    marginVertical: 12,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  activeTab: {
-    backgroundColor: theme.colors.primary,
-  },
-  tabText: {
-    fontFamily: theme.font,
-    color: theme.colors.muted,
-    fontSize: 15,
-  },
-  activeTabText: {
-    fontFamily: theme.fontBold,
-    color: '#fff',
-  },
-  scrollContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 100, // extra spacing for bottom button
-  },
-  sectionBlock: {
-    marginBottom: 20,
-  },
-  sectionHeader: {
-    color: theme.colors.primary,
-    fontFamily: theme.fontBold,
-    fontSize: 16,
-    textAlign: 'right',
-    marginBottom: 8,
-    alignSelf: 'stretch',
-  },
-  emptyCard: {
-    backgroundColor: theme.colors.surface,
-    padding: 16,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.03)',
-    alignItems: 'center',
-  },
-  emptyText: {
-    color: theme.colors.muted,
-    fontFamily: theme.font,
-    fontSize: 14,
-  },
-  deedCard: {
-    flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: theme.colors.surface,
-    padding: 14,
-    borderRadius: 14,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.03)',
-  },
-  deedInfo: {
-    flex: 1,
-    alignItems: 'flex-end',
-    paddingRight: 4,
-  },
-  deedName: {
-    color: theme.colors.text,
-    fontFamily: theme.fontBold,
-    fontSize: 16,
-    textAlign: 'right',
-    alignSelf: 'stretch',
-  },
-  metaRow: {
-    flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginTop: 6,
-  },
-  metaBadge: {
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    paddingVertical: 3,
-    paddingHorizontal: 8,
-    borderRadius: 8,
-  },
-  metaText: {
-    color: theme.colors.muted,
-    fontFamily: theme.font,
-    fontSize: 11,
-  },
-  linkedBadge: {
-    flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse',
-    alignItems: 'center',
-    gap: 4,
-    marginTop: 6,
-    backgroundColor: 'rgba(16, 185, 129, 0.08)',
-    borderWidth: 1,
-    borderColor: 'rgba(16, 185, 129, 0.15)',
-    paddingVertical: 3,
-    paddingHorizontal: 8,
-    borderRadius: 8,
-  },
-  linkedText: {
-    color: theme.colors.primary,
-    fontFamily: theme.font,
-    fontSize: 11,
-  },
-  cardActions: {
-    flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse',
-    alignItems: 'center',
-    gap: 12,
-  },
-  actionBtn: {
-    padding: 4,
-  },
-  dhikrsBlock: {
-    gap: 8,
-  },
-  bottomBar: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    backgroundColor: theme.colors.bg,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.05)',
-  },
-  primaryBtn: {
-    backgroundColor: theme.colors.primary,
-    height: 52,
-    borderRadius: 14,
-    flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  primaryBtnText: {
-    fontFamily: theme.fontBold,
-    color: '#fff',
-    fontSize: 16,
-  },
+function createStyles(theme: ThemeType) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.bg,
+    },
+    header: {
+      flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.surface,
+    },
+    headerTitle: {
+      color: theme.colors.text,
+      fontFamily: theme.fontBold,
+      fontSize: 20,
+    },
+    backBtn: {
+      position: 'absolute',
+      left: 16,
+    },
+    tabContainer: {
+      flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse',
+      backgroundColor: theme.colors.translucentBg,
+      borderRadius: 12,
+      padding: 4,
+      marginHorizontal: 16,
+      marginVertical: 12,
+    },
+    tab: {
+      flex: 1,
+      paddingVertical: 10,
+      borderRadius: 8,
+      alignItems: 'center',
+    },
+    activeTab: {
+      backgroundColor: theme.colors.primary,
+    },
+    tabText: {
+      fontFamily: theme.font,
+      color: theme.colors.muted,
+      fontSize: 15,
+    },
+    activeTabText: {
+      fontFamily: theme.fontBold,
+      color: '#fff',
+    },
+    scrollContent: {
+      paddingHorizontal: 16,
+      paddingBottom: 100, // extra spacing for bottom button
+    },
+    sectionBlock: {
+      marginBottom: 20,
+    },
+    sectionHeader: {
+      color: theme.colors.primary,
+      fontFamily: theme.fontBold,
+      fontSize: 16,
+      textAlign: 'right',
+      marginBottom: 8,
+      alignSelf: 'stretch',
+    },
+    emptyCard: {
+      backgroundColor: theme.colors.surface,
+      padding: 16,
+      borderRadius: 14,
+      borderWidth: 1,
+      borderColor: theme.colors.translucentBorder,
+      alignItems: 'center',
+    },
+    emptyText: {
+      color: theme.colors.muted,
+      fontFamily: theme.font,
+      fontSize: 14,
+    },
+    deedCard: {
+      flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      backgroundColor: theme.colors.surface,
+      padding: 14,
+      borderRadius: 14,
+      marginBottom: 8,
+      borderWidth: 1,
+      borderColor: theme.colors.translucentBorder,
+    },
+    deedInfo: {
+      flex: 1,
+      alignItems: 'flex-end',
+      paddingRight: 4,
+    },
+    deedName: {
+      color: theme.colors.text,
+      fontFamily: theme.fontBold,
+      fontSize: 16,
+      textAlign: 'right',
+      alignSelf: 'stretch',
+    },
+    metaRow: {
+      flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse',
+      flexWrap: 'wrap',
+      gap: 6,
+      marginTop: 6,
+    },
+    metaBadge: {
+      backgroundColor: theme.colors.translucentBgActive,
+      paddingVertical: 3,
+      paddingHorizontal: 8,
+      borderRadius: 8,
+    },
+    metaText: {
+      color: theme.colors.muted,
+      fontFamily: theme.font,
+      fontSize: 11,
+    },
+    linkedBadge: {
+      flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse',
+      alignItems: 'center',
+      gap: 4,
+      marginTop: 6,
+      backgroundColor: theme.colors.translucentPrimary,
+      borderWidth: 1,
+      borderColor: theme.colors.translucentPrimaryBorder,
+      paddingVertical: 3,
+      paddingHorizontal: 8,
+      borderRadius: 8,
+    },
+    linkedText: {
+      color: theme.colors.primary,
+      fontFamily: theme.font,
+      fontSize: 11,
+    },
+    cardActions: {
+      flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse',
+      alignItems: 'center',
+      gap: 12,
+    },
+    actionBtn: {
+      padding: 4,
+    },
+    dhikrsBlock: {
+      gap: 8,
+    },
+    bottomBar: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      paddingHorizontal: 16,
+      paddingTop: 12,
+      backgroundColor: theme.colors.bg,
+      borderTopWidth: 1,
+      borderTopColor: theme.colors.translucentBorder,
+    },
+    primaryBtn: {
+      backgroundColor: theme.colors.primary,
+      height: 52,
+      borderRadius: 14,
+      flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+    },
+    primaryBtnText: {
+      fontFamily: theme.fontBold,
+      color: '#fff',
+      fontSize: 16,
+    },
 
-  // MODALS
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.6)',
-  },
-  modalCard: {
-    backgroundColor: theme.colors.surface,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingHorizontal: 24,
-    paddingTop: 24,
-    maxHeight: '90%',
-  },
-  modalTitle: {
-    fontFamily: theme.fontBold,
-    fontSize: 20,
-    color: theme.colors.text,
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  modalForm: {
-    paddingBottom: 24,
-    width: '100%',
-    alignItems: 'stretch',
-  },
-  formGroup: {
-    marginBottom: 16,
-    width: '100%',
-    alignItems: I18nManager.isRTL ? 'flex-start' : 'flex-end',
-  },
-  formLabel: {
-    fontFamily: theme.fontBold,
-    fontSize: 14,
-    color: theme.colors.muted,
-    textAlign: 'right',
-    marginBottom: 8,
-    width: '100%',
-    alignSelf: 'stretch',
-  },
-  input: {
-    fontFamily: theme.font,
-    width: '100%',
-    height: 48,
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    fontSize: 15,
-    textAlign: I18nManager.isRTL ? 'right' : 'left',
-    color: theme.colors.text,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.03)',
-  },
-  switchFormGroup: {
-    flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    width: '100%',
-    marginBottom: 20,
-    backgroundColor: 'rgba(255,255,255,0.02)',
-    padding: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.03)',
-  },
-  switchLabel: {
-    fontFamily: theme.fontBold,
-    fontSize: 14,
-    color: theme.colors.text,
-    textAlign: 'right',
-  },
-  horizontalChips: {
-    flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse',
-    gap: 8,
-    paddingVertical: 4,
-  },
-  chip: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.02)',
-  },
-  activeChip: {
-    backgroundColor: 'rgba(16, 185, 129, 0.15)',
-    borderColor: theme.colors.primary,
-  },
-  chipText: {
-    fontFamily: theme.font,
-    color: theme.colors.muted,
-    fontSize: 14,
-  },
-  activeChipText: {
-    fontFamily: theme.fontBold,
-    color: theme.colors.primary,
-  },
-  segmentedControl: {
-    flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse',
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderRadius: 12,
-    padding: 3,
-    width: '100%',
-    alignSelf: 'stretch',
-  },
-  segmentBtn: {
-    flex: 1,
-    paddingVertical: 8,
-    borderRadius: 9,
-    alignItems: 'center',
-  },
-  activeSegmentBtn: {
-    backgroundColor: theme.colors.primary,
-  },
-  segmentText: {
-    fontFamily: theme.font,
-    color: theme.colors.muted,
-    fontSize: 13,
-  },
-  activeSegmentText: {
-    fontFamily: theme.fontBold,
-    color: '#fff',
-  },
-  modalActions: {
-    flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse',
-    gap: 12,
-    marginVertical: 20,
-  },
-  modalCancelBtn: {
-    flex: 1,
-    height: 48,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  modalCancelText: {
-    fontFamily: theme.font,
-    color: theme.colors.muted,
-    fontSize: 15,
-  },
-  modalSaveBtn: {
-    flex: 1,
-    height: 48,
-    borderRadius: 12,
-    backgroundColor: theme.colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  modalSaveText: {
-    fontFamily: theme.fontBold,
-    color: '#fff',
-    fontSize: 15,
-  },
-  dayBubblesRow: {
-    flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse',
-    justifyContent: 'space-between',
-    marginTop: 12,
-    paddingHorizontal: 4,
-    width: '100%',
-    alignSelf: 'stretch',
-  },
-  dayBubble: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: 'rgba(255, 255, 255, 0.04)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  dayBubbleSelected: {
-    backgroundColor: theme.colors.primary,
-    borderColor: theme.colors.primary,
-  },
-  dayBubbleText: {
-    fontFamily: theme.font,
-    color: theme.colors.muted,
-    fontSize: 14,
-  },
-  dayBubbleTextSelected: {
-    fontFamily: theme.fontBold,
-    color: '#fff',
-  },
-  dayColumn: {
-    alignItems: 'center',
-  },
-  dayNameLabel: {
-    fontFamily: theme.font,
-    color: theme.colors.muted,
-    fontSize: 10,
-    marginTop: 4,
-  },
-});
+    // MODALS
+    modalOverlay: {
+      flex: 1,
+      justifyContent: 'flex-end',
+      backgroundColor: theme.colors.overlayBg,
+    },
+    modalCard: {
+      backgroundColor: theme.colors.surface,
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      paddingHorizontal: 24,
+      paddingTop: 24,
+      maxHeight: '90%',
+    },
+    modalTitle: {
+      fontFamily: theme.fontBold,
+      fontSize: 20,
+      color: theme.colors.text,
+      textAlign: 'center',
+      marginBottom: 20,
+    },
+    modalForm: {
+      paddingBottom: 24,
+      width: '100%',
+      alignItems: 'stretch',
+    },
+    formGroup: {
+      marginBottom: 16,
+      width: '100%',
+      alignItems: I18nManager.isRTL ? 'flex-start' : 'flex-end',
+    },
+    formLabel: {
+      fontFamily: theme.fontBold,
+      fontSize: 14,
+      color: theme.colors.muted,
+      textAlign: 'right',
+      marginBottom: 8,
+      width: '100%',
+      alignSelf: 'stretch',
+    },
+    input: {
+      fontFamily: theme.font,
+      width: '100%',
+      height: 48,
+      backgroundColor: theme.colors.translucentBgActive,
+      borderRadius: 12,
+      paddingHorizontal: 16,
+      fontSize: 15,
+      textAlign: I18nManager.isRTL ? 'right' : 'left',
+      color: theme.colors.text,
+      borderWidth: 1,
+      borderColor: theme.colors.translucentBorder,
+    },
+    switchFormGroup: {
+      flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      width: '100%',
+      marginBottom: 20,
+      backgroundColor: theme.colors.translucentBg,
+      padding: 12,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: theme.colors.translucentBorder,
+    },
+    switchLabel: {
+      fontFamily: theme.fontBold,
+      fontSize: 14,
+      color: theme.colors.text,
+      textAlign: 'right',
+    },
+    horizontalChips: {
+      flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse',
+      gap: 8,
+      paddingVertical: 4,
+    },
+    chip: {
+      paddingVertical: 8,
+      paddingHorizontal: 16,
+      borderRadius: 20,
+      backgroundColor: theme.colors.translucentBg,
+      borderWidth: 1,
+      borderColor: theme.colors.translucentBorder,
+    },
+    activeChip: {
+      backgroundColor: theme.colors.translucentPrimaryBorder,
+      borderColor: theme.colors.primary,
+    },
+    chipText: {
+      fontFamily: theme.font,
+      color: theme.colors.muted,
+      fontSize: 14,
+    },
+    activeChipText: {
+      fontFamily: theme.fontBold,
+      color: theme.colors.primary,
+    },
+    segmentedControl: {
+      flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse',
+      backgroundColor: theme.colors.translucentBg,
+      borderRadius: 12,
+      padding: 3,
+      width: '100%',
+      alignSelf: 'stretch',
+    },
+    segmentBtn: {
+      flex: 1,
+      paddingVertical: 8,
+      borderRadius: 9,
+      alignItems: 'center',
+    },
+    activeSegmentBtn: {
+      backgroundColor: theme.colors.primary,
+    },
+    segmentText: {
+      fontFamily: theme.font,
+      color: theme.colors.muted,
+      fontSize: 13,
+    },
+    activeSegmentText: {
+      fontFamily: theme.fontBold,
+      color: '#fff',
+    },
+    modalActions: {
+      flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse',
+      gap: 12,
+      marginVertical: 20,
+    },
+    modalCancelBtn: {
+      flex: 1,
+      height: 48,
+      borderRadius: 12,
+      backgroundColor: theme.colors.translucentBg,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    modalCancelText: {
+      fontFamily: theme.font,
+      color: theme.colors.muted,
+      fontSize: 15,
+    },
+    modalSaveBtn: {
+      flex: 1,
+      height: 48,
+      borderRadius: 12,
+      backgroundColor: theme.colors.primary,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    modalSaveText: {
+      fontFamily: theme.fontBold,
+      color: '#fff',
+      fontSize: 15,
+    },
+    dayBubblesRow: {
+      flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse',
+      justifyContent: 'space-between',
+      marginTop: 12,
+      paddingHorizontal: 4,
+      width: '100%',
+      alignSelf: 'stretch',
+    },
+    dayBubble: {
+      width: 38,
+      height: 38,
+      borderRadius: 19,
+      backgroundColor: theme.colors.translucentBg,
+      borderWidth: 1,
+      borderColor: theme.colors.translucentBorderStrong,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    dayBubbleSelected: {
+      backgroundColor: theme.colors.primary,
+      borderColor: theme.colors.primary,
+    },
+    dayBubbleText: {
+      fontFamily: theme.font,
+      color: theme.colors.muted,
+      fontSize: 14,
+    },
+    dayBubbleTextSelected: {
+      fontFamily: theme.fontBold,
+      color: '#fff',
+    },
+    dayColumn: {
+      alignItems: 'center',
+    },
+    dayNameLabel: {
+      fontFamily: theme.font,
+      color: theme.colors.muted,
+      fontSize: 10,
+      marginTop: 4,
+    },
+  });
+}

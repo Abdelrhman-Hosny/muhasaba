@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { View, Text, Pressable, LayoutChangeEvent, GestureResponderEvent } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { theme } from '@/ui/theme';
+import { useTheme } from '@/ui/theme';
 import { toArabicNumeral } from '@/i18n/format';
 import { DeedRow as DeedRowType, DeedLogRow } from '@/db/schema';
 
@@ -17,6 +17,7 @@ function CustomSlider({
   max: number;
   onChange: (val: number) => void;
 }) {
+  const theme = useTheme();
   const [width, setWidth] = useState(0);
   const trackRef = useRef<View>(null);
   const [leftOffset, setLeftOffset] = useState(0);
@@ -56,7 +57,7 @@ function CustomSlider({
         style={{
           height: 6,
           borderRadius: 3,
-          backgroundColor: 'rgba(255,255,255,0.1)',
+          backgroundColor: theme.colors.translucentBgActive,
           width: '100%',
           position: 'relative',
         }}
@@ -105,6 +106,7 @@ export function DeedRow({
   log: DeedLogRow | null;
   onChange: (status: 'done' | 'not_yet', value: number | null) => void;
 }) {
+  const theme = useTheme();
   const [expanded, setExpanded] = useState(false);
   const done = log?.status === 'done';
 
@@ -199,7 +201,7 @@ export function DeedRow({
 
       {/* Embedded Progress bar only visible when collapsed */}
       {!expanded && (
-        <View style={{ height: 3, backgroundColor: 'rgba(255,255,255,0.05)', width: '100%' }}>
+        <View style={{ height: 3, backgroundColor: theme.colors.translucentBorder, width: '100%' }}>
           <View style={{ height: '100%', width: `${progressPct}%`, backgroundColor: theme.colors.primary }} />
         </View>
       )}
@@ -210,7 +212,7 @@ export function DeedRow({
           style={{
             paddingVertical: 14,
             paddingHorizontal: 20,
-            backgroundColor: 'rgba(255,255,255,0.02)',
+            backgroundColor: theme.colors.translucentBg,
           }}
         >
           {isLargeCounter ? (
@@ -290,11 +292,11 @@ export function DeedRow({
                   borderRadius: 20,
                   backgroundColor: theme.colors.surface,
                   borderWidth: 1,
-                  borderColor: currentValue === 0 ? 'rgba(255,255,255,0.08)' : theme.colors.text,
+                  borderColor: currentValue === 0 ? theme.colors.translucentBorderStrong : theme.colors.text,
                   opacity: currentValue === 0 ? 0.5 : 1,
                 }}
               >
-                <Text style={{ fontFamily: theme.font, color: currentValue === 0 ? 'rgba(255,255,255,0.3)' : theme.colors.text, fontSize: 15 }}>-10</Text>
+                <Text style={{ fontFamily: theme.font, color: currentValue === 0 ? theme.colors.inputPlaceholder : theme.colors.text, fontSize: 15 }}>-10</Text>
               </Pressable>
 
               {/* Reset (تصفير) */}
@@ -308,11 +310,11 @@ export function DeedRow({
                   borderRadius: 20,
                   backgroundColor: theme.colors.surface,
                   borderWidth: 1,
-                  borderColor: currentValue === 0 ? 'rgba(255,255,255,0.08)' : theme.colors.missed,
+                  borderColor: currentValue === 0 ? theme.colors.translucentBorderStrong : theme.colors.missed,
                   opacity: currentValue === 0 ? 0.5 : 1,
                 }}
               >
-                <Text style={{ fontFamily: theme.font, color: currentValue === 0 ? 'rgba(255,255,255,0.3)' : theme.colors.missed, fontSize: 15 }}>تصفير</Text>
+                <Text style={{ fontFamily: theme.font, color: currentValue === 0 ? theme.colors.inputPlaceholder : theme.colors.missed, fontSize: 15 }}>تصفير</Text>
               </Pressable>
             </View>
           ) : (

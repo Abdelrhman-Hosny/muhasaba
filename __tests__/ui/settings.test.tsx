@@ -44,10 +44,16 @@ jest.mock('react-native-safe-area-context', () => ({
   useSafeAreaInsets: () => ({ top: 40, bottom: 20, left: 0, right: 0 }),
 }));
 
+let mockLocalSearchParams: Record<string, string> = {};
 jest.mock('expo-router', () => ({
   useRouter: () => ({
     back: jest.fn(),
+    push: jest.fn(),
+    setParams: jest.fn((params) => {
+      mockLocalSearchParams = { ...mockLocalSearchParams, ...params };
+    }),
   }),
+  useLocalSearchParams: () => mockLocalSearchParams,
   Stack: {
     Screen: jest.fn(() => null),
   },
@@ -97,6 +103,7 @@ const mockDhikrs = [
 describe('SettingsScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockLocalSearchParams = {};
     (useSections as jest.Mock).mockReturnValue(mockSections);
     (useScorecardStructure as jest.Mock).mockReturnValue(mockScorecardStructure);
     (useLiveQuery as jest.Mock).mockReturnValue({ data: mockDhikrs });
@@ -149,10 +156,8 @@ describe('SettingsScreen', () => {
   });
 
   it('adds custom deed via modal', async () => {
-    const { getByTestId, getByText } = render(<SettingsScreen />);
-
-    // Open Add Deed Modal
-    fireEvent.press(getByTestId('btn-add-deed'));
+    mockLocalSearchParams = { openCustomDeedModal: 'true' };
+    const { getByTestId } = render(<SettingsScreen />);
 
     // Fill deed name
     fireEvent.changeText(getByTestId('input-deed-name'), 'ورد التسبيح');
@@ -174,10 +179,8 @@ describe('SettingsScreen', () => {
   });
 
   it('adds custom deed with numeric target via switch toggle', async () => {
+    mockLocalSearchParams = { openCustomDeedModal: 'true' };
     const { getByTestId, queryByTestId } = render(<SettingsScreen />);
-
-    // Open Add Deed Modal
-    fireEvent.press(getByTestId('btn-add-deed'));
 
     // Target input field should initially not be visible since showTargetInput defaults to false
     expect(queryByTestId('input-deed-target')).toBeNull();
@@ -232,10 +235,8 @@ describe('SettingsScreen', () => {
   });
 
   it('adds custom deed with specific days selection via bubbles', async () => {
+    mockLocalSearchParams = { openCustomDeedModal: 'true' };
     const { getByTestId } = render(<SettingsScreen />);
-
-    // Open Add Deed Modal
-    fireEvent.press(getByTestId('btn-add-deed'));
 
     // Fill deed name
     fireEvent.changeText(getByTestId('input-deed-name'), 'صيام التطوع');
@@ -257,35 +258,6 @@ describe('SettingsScreen', () => {
         null,
         null,
         null
-      );
-    });
-  });
-
-  it('displays preset suggestions and populates the form on tap', async () => {
-    const { getByTestId, getByText } = render(<SettingsScreen />);
-
-    // Open Add Deed Modal
-    fireEvent.press(getByTestId('btn-add-deed'));
-
-    // Check that preset suggestion is rendered
-    expect(getByText('عبادات مقترحة')).toBeTruthy();
-    expect(getByText('سنة الفجر')).toBeTruthy();
-
-    // Click on suggestion chip
-    fireEvent.press(getByTestId('preset-chip-sunnah_fajr'));
-
-    // Save
-    fireEvent.press(getByTestId('btn-save-deed'));
-
-    await waitFor(() => {
-      expect(addDeed).toHaveBeenCalledWith(
-        'سنة الفجر',
-        'sec_morning',
-        'boolean',
-        'daily',
-        null,
-        null,
-        'sunnah_fajr'
       );
     });
   });

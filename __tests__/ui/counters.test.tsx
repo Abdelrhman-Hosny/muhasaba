@@ -150,6 +150,6 @@ describe('CountersScreen', () => {
 
     fireEvent.press(getByTestId('btn-drawer-toggle'));
 
-    expect(getByText('الإعدادات')).toBeTruthy();
+    expect(getByText('تعديل الجدول والعبادات')).toBeTruthy();
   });
 });

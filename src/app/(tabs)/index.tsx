@@ -4,7 +4,7 @@ import { ar } from '@/i18n/ar';
 import { toArabicNumeral } from '@/i18n/format';
 import { useScorecard, setDeedLog, useDatesPercentages } from '@/state/deedStore';
 import { DeedRow } from '@/ui/components/DeedRow';
-import { theme } from '@/ui/theme';
+import { useTheme } from '@/ui/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { useState, useMemo } from 'react';
 import { Pressable, ScrollView, Text, View, I18nManager } from 'react-native';
@@ -20,6 +20,7 @@ function dayLabel(date: string, today: string): { top: string; sub: string } {
 }
 
 export default function DayScreen() {
+  const theme = useTheme();
   const insets = useSafeAreaInsets();
   const today = todayKey();
   const dates = editableDates(today, EDITABLE_DAYS_BACK); // today → oldest

@@ -15,7 +15,7 @@ export const deedDefinitions = sqliteTable('deed_definitions', {
 });
 
 /**
- * Scorecard sections (e.g., "الصلوات المفروضة", "السنن الرواتب", "القرآن الكريم", "الأذكار")
+ * Scorecard sections (e.g., "الصلوات المفروضة", "السنن الرواتب", "أعمال على مدار اليوم", "الأذكار")
  */
 export const sections = sqliteTable('sections', {
   id: text('id').primaryKey(),

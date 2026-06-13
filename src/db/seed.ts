@@ -7,6 +7,12 @@ import { sql, eq } from 'drizzle-orm';
  * if they are not already populated.
  */
 export async function seedDatabase() {
+  // 0. Update name of sec_quran for existing database seed to match the new requirement
+  await db
+    .update(sections)
+    .set({ name: 'أعمال على مدار اليوم' })
+    .where(eq(sections.id, 'sec_quran'));
+
   // Developer-friendly check: If old section 'sec_prayers' exists, clear to re-seed the new time-of-day layout
   const oldSection = await db.select().from(sections).where(eq(sections.id, 'sec_prayers')).limit(1);
   if (oldSection.length > 0) {
@@ -61,7 +67,7 @@ export async function seedDatabase() {
     { id: 'sec_asr', name: 'العصر', sortOrder: 3, updatedAt: Date.now() },
     { id: 'sec_maghrib', name: 'المغرب', sortOrder: 4, updatedAt: Date.now() },
     { id: 'sec_isha_night', name: 'العشاء والليل', sortOrder: 5, updatedAt: Date.now() },
-    { id: 'sec_quran', name: 'القرآن الكريم', sortOrder: 6, updatedAt: Date.now() },
+    { id: 'sec_quran', name: 'أعمال على مدار اليوم', sortOrder: 6, updatedAt: Date.now() },
   ];
 
   for (const sec of defaultSections) {
