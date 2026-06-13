@@ -160,11 +160,6 @@ export default function CountersScreen() {
                   >
                     <Ionicons name="trash-outline" size={20} color={theme.colors.muted} />
                   </Pressable>
-
-                  {/* Active Indicator Icon */}
-                  {active && (
-                    <Ionicons name="checkmark-circle" size={24} color={theme.colors.primary} />
-                  )}
                 </View>
               </Pressable>
             );

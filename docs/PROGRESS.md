@@ -190,6 +190,7 @@ Based on [UX spec](superpowers/specs/2026-06-11-ux-discussion-summary.md) and [A
 - [x] Corrected `deedInfo` items layout alignment inside `settings.tsx` to align to the right under RTL by making `alignItems` and horizontal padding conditional on `I18nManager.isRTL`
 - [x] Fixed hardcoded `flexDirection: 'row-reverse'` in checklist rows [DeedRow.tsx](file:///Users/abdelrahmanhosny/coding/muhassaba/src/ui/components/DeedRow.tsx) by making it conditional on `I18nManager.isRTL` to prevent dynamic mirroring from double-flipping checkbox layouts
 - [x] Fixed all hardcoded `flexDirection: 'row-reverse'` layouts on the absolute dhikr counter tab [counters.tsx](file:///Users/abdelrahmanhosny/coding/muhassaba/src/app/(tabs)/counters.tsx) including the top header, the checklist card items, the keypad buttons, and the custom input blocks to align appropriately in RTL without double-flipping
+- [x] Removed the selected checkmark icon tick from active counter list items in `counters.tsx` to simplify and polish visual feedback by relying purely on the colored card highlights
 
 ### Housekeeping & Tests
 - [x] Cleaned up unused styles and imports from `settings.tsx`
