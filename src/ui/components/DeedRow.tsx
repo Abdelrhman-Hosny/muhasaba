@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { View, Text, Pressable, LayoutChangeEvent, GestureResponderEvent } from 'react-native';
+import { View, Text, Pressable, LayoutChangeEvent, GestureResponderEvent, I18nManager } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/ui/theme';
 import { toArabicNumeral } from '@/i18n/format';
@@ -117,7 +117,7 @@ export function DeedRow({
         testID="btn-toggle"
         onPress={() => onChange(done ? 'not_yet' : 'done', null)}
         style={{
-          flexDirection: 'row-reverse',
+          flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse',
           alignItems: 'center',
           justifyContent: 'space-between',
           backgroundColor: done ? theme.colors.surfaceDone : theme.colors.surface,
@@ -168,13 +168,13 @@ export function DeedRow({
         testID="btn-expand"
         onPress={() => setExpanded(!expanded)}
         style={{
-          flexDirection: 'row-reverse',
+          flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse',
           alignItems: 'center',
           justifyContent: 'space-between',
           padding: 16,
         }}
       >
-        <View style={{ flexDirection: 'row-reverse', alignItems: 'center', gap: 8 }}>
+        <View style={{ flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse', alignItems: 'center', gap: 8 }}>
           <Text style={{ color: done ? theme.colors.text : theme.colors.muted, fontFamily: theme.font, fontSize: 18 }}>
             {deed.name}
           </Text>
@@ -216,7 +216,7 @@ export function DeedRow({
           }}
         >
           {isLargeCounter ? (
-            <View style={{ flexDirection: 'row-reverse', flexWrap: 'wrap', justifyContent: 'center', gap: 8 }}>
+            <View style={{ flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse', flexWrap: 'wrap', justifyContent: 'center', gap: 8 }}>
               {/* +1 */}
               <Pressable
                 testID="btn-chip-1"
