@@ -142,6 +142,39 @@ Based on [UX spec](superpowers/specs/2026-06-11-ux-discussion-summary.md) and [A
 
 ---
 
+## ✅ Iteration 5.1 — Deeds Library & Presets Integration (2026-06-13)
+
+### Schema & Seeding
+- [x] Extended `deed_definitions` table with `defaultSectionId`, `bundleId`, and `linkedDhikrTemplate`.
+- [x] Generated Drizzle schema migration (`0002_worried_zaladane.sql`).
+- [x] Expanded default seed data in `src/db/seed.ts` to include standard prayers, rawateb (Sunnah) bundles, and special items with linked dhikr templates.
+
+### Deeds Library Screen
+- [x] Created `src/app/library.tsx` screen.
+- [x] Grouped presets into expandable bundles (e.g. سنن الرواتب) and standalone items.
+- [x] Search filter for deeds library by name.
+- [x] Single-click to add a deed from presets, with automatic creation of any linked dhikr templates.
+- [x] "Add custom deed" action routing back to settings custom-deed form.
+
+### Settings Integration
+- [x] Refactored `settings.tsx` to redirect the "Add Deed" button to the new dedicated Library page.
+- [x] Handle deep-linking search params to automatically open the custom deed modal on return.
+- [x] Relocated suggested presets from Settings modal to the dedicated Library.
+
+### Files touched
+| Action | File |
+|---|---|
+| Created | `src/app/library.tsx` |
+| Created | `drizzle/0002_worried_zaladane.sql` |
+| Created | `drizzle/meta/0002_snapshot.json` |
+| Modified | `src/db/schema.ts` |
+| Modified | `src/db/seed.ts` |
+| Modified | `src/app/settings.tsx` |
+| Modified | `drizzle/meta/_journal.json` |
+| Modified | `drizzle/migrations.js` |
+
+---
+
 ## 🔲 Remaining Work (by priority)
 
 ### Iteration 3 — Day Screen Polish
@@ -154,8 +187,8 @@ Based on [UX spec](superpowers/specs/2026-06-11-ux-discussion-summary.md) and [A
 ### Iteration 5 — Edit Scorecard
 - [ ] Dedicated "تعديل الجدول" screen from Settings
 - [ ] Reorder deeds (drag handle)
-- [ ] Add deeds from library (library picker modal)
-- [ ] Add custom deed
+- [x] Add deeds from library
+- [x] Add custom deed
 - [ ] Deed settings modal (schedule type, section assignment)
 - [ ] Delete deed
 
