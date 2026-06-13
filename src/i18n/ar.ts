@@ -14,7 +14,7 @@ export const ar = {
   drawer: { stats: 'الإحصائيات', settings: 'تعديل الجدول والعبادات', account: 'الحساب', version: 'الإصدار ' },
   tabs: { day: 'اليوم', week: 'الأسبوع', counters: 'الأذكار' },
   days: { today: 'اليوم', yesterday: 'أمس' },
-  summary: { completed: 'صلوات مكتملة', completedSection: 'تم إنجازها / تجاوزها' },
+  summary: { completed: 'صلوات مكتملة', completedSection: 'تم إنجازها / تجاوزها', doneSection: 'تم إنجازها', skippedSection: 'تجاوزها' },
   header: { score: 'الدرجة' },
   counters: {
     title: 'الأذكار المطلقة',

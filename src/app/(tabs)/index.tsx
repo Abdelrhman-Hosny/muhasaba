@@ -106,22 +106,24 @@ export default function DayScreen() {
     }
   };
 
-  // Split scorecard into uncompleted sections and completed items
-  const { uncompletedSections, completedItems } = useMemo(() => {
+  // Split scorecard into uncompleted sections, done items, and skipped items
+  const { uncompletedSections, doneItems, skippedItems } = useMemo(() => {
     const uncompleted: typeof scorecard = [];
-    const completed: typeof scorecard[0]['items'] = [];
+    const done: typeof scorecard[0]['items'] = [];
+    const skipped: typeof scorecard[0]['items'] = [];
 
     for (const sec of scorecard) {
       const uncompletedItemsInSec: typeof sec.items = [];
-      const completedItemsInSec: typeof sec.items = [];
 
       for (const item of sec.items) {
         const isFading = fadingDeedIds[item.deed.id] !== undefined;
         const isDone = item.log?.status === 'done';
         const isNotDone = item.log?.status === 'not_done';
 
-        if ((isDone || isNotDone) && !isFading) {
-          completedItemsInSec.push(item);
+        if (isDone && !isFading) {
+          done.push(item);
+        } else if (isNotDone && !isFading) {
+          skipped.push(item);
         } else {
           uncompletedItemsInSec.push(item);
         }
@@ -133,11 +135,12 @@ export default function DayScreen() {
           items: uncompletedItemsInSec,
         });
       }
-      completed.push(...completedItemsInSec);
     }
 
-    return { uncompletedSections: uncompleted, completedItems: completed };
+    return { uncompletedSections: uncompleted, doneItems: done, skippedItems: skipped };
   }, [scorecard, fadingDeedIds]);
+
+  const completedCount = doneItems.length + skippedItems.length;
 
   // Compute total points and total active tasks for the selected date
   const { totalTasks, donePoints } = useMemo(() => {
@@ -258,7 +261,7 @@ export default function DayScreen() {
           </View>
         ))}
 
-        {completedItems.length > 0 && (
+        {completedCount > 0 && (
           <View style={{ marginTop: 8, marginBottom: 16 }}>
             <Pressable
               onPress={() => setCompletedExpanded(!completedExpanded)}
@@ -286,7 +289,7 @@ export default function DayScreen() {
                   fontFamily: theme.font,
                   fontSize: 14,
                 }}>
-                  {`(${toArabicNumeral(completedItems.length)})`}
+                  {`(${toArabicNumeral(completedCount)})`}
                 </Text>
               </View>
               <Ionicons
@@ -298,15 +301,45 @@ export default function DayScreen() {
 
             {completedExpanded && (
               <View style={{ marginTop: 4 }}>
-                {completedItems.map(({ deed, log }) => (
-                  <DeedRow
-                    key={deed.id}
-                    deed={deed}
-                    log={log}
-                    date={selected}
-                    onChange={(status, value) => handleDeedChange(deed.id, status, value)}
-                  />
-                ))}
+                {doneItems.length > 0 && (
+                  <View style={{ marginBottom: skippedItems.length > 0 ? 16 : 0 }}>
+                    <View style={{ flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                      <Ionicons name="checkmark-circle" size={16} color={theme.colors.primary} />
+                      <Text style={{ color: theme.colors.muted, fontFamily: theme.fontBold, fontSize: 14 }}>
+                        {`${ar.summary.doneSection} (${toArabicNumeral(doneItems.length)})`}
+                      </Text>
+                    </View>
+                    {doneItems.map(({ deed, log }) => (
+                      <DeedRow
+                        key={deed.id}
+                        deed={deed}
+                        log={log}
+                        date={selected}
+                        onChange={(status, value) => handleDeedChange(deed.id, status, value)}
+                      />
+                    ))}
+                  </View>
+                )}
+
+                {skippedItems.length > 0 && (
+                  <View>
+                    <View style={{ flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                      <Ionicons name="close-circle" size={16} color={theme.colors.missed} />
+                      <Text style={{ color: theme.colors.muted, fontFamily: theme.fontBold, fontSize: 14 }}>
+                        {`${ar.summary.skippedSection} (${toArabicNumeral(skippedItems.length)})`}
+                      </Text>
+                    </View>
+                    {skippedItems.map(({ deed, log }) => (
+                      <DeedRow
+                        key={deed.id}
+                        deed={deed}
+                        log={log}
+                        date={selected}
+                        onChange={(status, value) => handleDeedChange(deed.id, status, value)}
+                      />
+                    ))}
+                  </View>
+                )}
               </View>
             )}
           </View>
