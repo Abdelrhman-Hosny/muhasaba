@@ -34,12 +34,15 @@ export const DEFAULT_DEED_DEFINITIONS = [
   // 5. الأذكار المقيدة اليومية (bundle_adhkar_muqayyada)
   { id: 'muqayyada_wake', name: 'أذكار الاستيقاظ', type: 'boolean', defaultSchedule: 'daily', defaultSectionId: 'sec_morning', bundleId: 'bundle_adhkar_muqayyada', linkedDhikrTemplate: null },
   { id: 'muqayyada_sleep', name: 'أذكار النوم', type: 'boolean', defaultSchedule: 'daily', defaultSectionId: 'sec_isha_night', bundleId: 'bundle_adhkar_muqayyada', linkedDhikrTemplate: null },
-  { id: 'muqayyada_toilet', name: 'دعاء دخول الخلاء والخروج منه', type: 'boolean', defaultSchedule: 'daily', defaultSectionId: 'sec_quran', bundleId: 'bundle_adhkar_muqayyada', linkedDhikrTemplate: null },
+  { id: 'muqayyada_toilet_in', name: 'دعاء دخول الخلاء', type: 'boolean', defaultSchedule: 'daily', defaultSectionId: 'sec_quran', bundleId: 'bundle_adhkar_muqayyada', linkedDhikrTemplate: null },
+  { id: 'muqayyada_toilet_out', name: 'دعاء الخروج من الخلاء', type: 'boolean', defaultSchedule: 'daily', defaultSectionId: 'sec_quran', bundleId: 'bundle_adhkar_muqayyada', linkedDhikrTemplate: null },
   { id: 'muqayyada_wudhu', name: 'أذكار الوضوء', type: 'boolean', defaultSchedule: 'daily', defaultSectionId: 'sec_quran', bundleId: 'bundle_adhkar_muqayyada', linkedDhikrTemplate: null },
-  { id: 'muqayyada_home_in_out', name: 'دعاء دخول المنزل والخروج منه', type: 'boolean', defaultSchedule: 'daily', defaultSectionId: 'sec_quran', bundleId: 'bundle_adhkar_muqayyada', linkedDhikrTemplate: null },
+  { id: 'muqayyada_home_in', name: 'الذكر عند دخول المنزل', type: 'boolean', defaultSchedule: 'daily', defaultSectionId: 'sec_quran', bundleId: 'bundle_adhkar_muqayyada', linkedDhikrTemplate: null },
+  { id: 'muqayyada_home_out', name: 'الذكر عند الخروج من المنزل', type: 'boolean', defaultSchedule: 'daily', defaultSectionId: 'sec_quran', bundleId: 'bundle_adhkar_muqayyada', linkedDhikrTemplate: null },
   { id: 'muqayyada_riding', name: 'دعاء الركوب', type: 'boolean', defaultSchedule: 'daily', defaultSectionId: 'sec_quran', bundleId: 'bundle_adhkar_muqayyada', linkedDhikrTemplate: null },
   { id: 'muqayyada_mosque_walk', name: 'دعاء المشي إلى المسجد', type: 'boolean', defaultSchedule: 'daily', defaultSectionId: 'sec_quran', bundleId: 'bundle_adhkar_muqayyada', linkedDhikrTemplate: null },
-  { id: 'muqayyada_mosque_in_out', name: 'دعاء دخول المسجد والخروج منه', type: 'boolean', defaultSchedule: 'daily', defaultSectionId: 'sec_quran', bundleId: 'bundle_adhkar_muqayyada', linkedDhikrTemplate: null },
+  { id: 'muqayyada_mosque_in', name: 'دعاء دخول المسجد', type: 'boolean', defaultSchedule: 'daily', defaultSectionId: 'sec_quran', bundleId: 'bundle_adhkar_muqayyada', linkedDhikrTemplate: null },
+  { id: 'muqayyada_mosque_out', name: 'دعاء الخروج من المسجد', type: 'boolean', defaultSchedule: 'daily', defaultSectionId: 'sec_quran', bundleId: 'bundle_adhkar_muqayyada', linkedDhikrTemplate: null },
   { id: 'muqayyada_majlis_istighfar', name: 'الاستغفار في المجلس', type: 'boolean', defaultSchedule: 'daily', defaultSectionId: 'sec_quran', bundleId: 'bundle_adhkar_muqayyada', linkedDhikrTemplate: null },
   { id: 'muqayyada_majlis_expiation', name: 'كفارة المجلس', type: 'boolean', defaultSchedule: 'daily', defaultSectionId: 'sec_quran', bundleId: 'bundle_adhkar_muqayyada', linkedDhikrTemplate: null },
   { id: 'adhkar_morning', name: 'أذكار الصباح', type: 'boolean', defaultSchedule: 'daily', defaultSectionId: 'sec_morning', bundleId: 'bundle_adhkar_muqayyada', linkedDhikrTemplate: null },
@@ -197,19 +200,31 @@ export async function seedDatabase() {
       },
       {
         oldId: 'muqayyada_toilet_wudhu',
-        newDefs: ['muqayyada_toilet', 'muqayyada_wudhu']
+        newDefs: ['muqayyada_toilet_in', 'muqayyada_toilet_out', 'muqayyada_wudhu']
       },
       {
         oldId: 'muqayyada_home',
-        newDefs: ['muqayyada_home_in_out', 'muqayyada_riding']
+        newDefs: ['muqayyada_home_in', 'muqayyada_home_out', 'muqayyada_riding']
       },
       {
         oldId: 'muqayyada_mosque',
-        newDefs: ['muqayyada_mosque_walk', 'muqayyada_mosque_in_out']
+        newDefs: ['muqayyada_mosque_walk', 'muqayyada_mosque_in', 'muqayyada_mosque_out']
       },
       {
         oldId: 'muqayyada_majlis',
         newDefs: ['muqayyada_majlis_istighfar', 'muqayyada_majlis_expiation']
+      },
+      {
+        oldId: 'muqayyada_toilet',
+        newDefs: ['muqayyada_toilet_in', 'muqayyada_toilet_out']
+      },
+      {
+        oldId: 'muqayyada_home_in_out',
+        newDefs: ['muqayyada_home_in', 'muqayyada_home_out']
+      },
+      {
+        oldId: 'muqayyada_mosque_in_out',
+        newDefs: ['muqayyada_mosque_in', 'muqayyada_mosque_out']
       }
     ];
 
@@ -245,9 +260,9 @@ export async function seedDatabase() {
     // Ensure all 10 new split definitions exist
     const newSplitIds = [
       'muqayyada_wake', 'muqayyada_sleep',
-      'muqayyada_toilet', 'muqayyada_wudhu',
-      'muqayyada_home_in_out', 'muqayyada_riding',
-      'muqayyada_mosque_walk', 'muqayyada_mosque_in_out',
+      'muqayyada_toilet_in', 'muqayyada_toilet_out', 'muqayyada_wudhu',
+      'muqayyada_home_in', 'muqayyada_home_out', 'muqayyada_riding',
+      'muqayyada_mosque_walk', 'muqayyada_mosque_in', 'muqayyada_mosque_out',
       'muqayyada_majlis_istighfar', 'muqayyada_majlis_expiation'
     ];
 

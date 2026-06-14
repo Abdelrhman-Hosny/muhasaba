@@ -3,11 +3,23 @@ import { DeedRow } from '@/ui/components/DeedRow';
 import { DeedRow as DeedRowType, DeedLogRow } from '@/db/schema';
 
 jest.mock('@/domain/azkarData', () => ({
-  morningAdhkar: [
-    { dhikr: 'Test Morning Dhikr', description: 'Test desc', count: 1, reference: 'Ref' }
-  ],
-  eveningAdhkar: [
-    { dhikr: 'Test Evening Dhikr', description: 'Test desc', count: 1, reference: 'Ref' }
+  azkarCategories: [
+    {
+      index: 0,
+      title: 'أذكار الصباح',
+      search: 'أذكار الصباح',
+      items: [
+        { dhikr: 'Test Morning Dhikr', description: 'Test desc', count: 1, reference: 'Ref' },
+      ],
+    },
+    {
+      index: 1,
+      title: 'أذكار المساء',
+      search: 'أذكار المساء',
+      items: [
+        { dhikr: 'Test Evening Dhikr', description: 'Test desc', count: 1, reference: 'Ref' },
+      ],
+    },
   ],
 }));
 

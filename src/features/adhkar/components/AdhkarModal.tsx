@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { createMMKV } from 'react-native-mmkv';
 import { useTheme } from '@/ui/theme';
 import { DeedRow as DeedRowType } from '@/db/schema';
-import { morningAdhkar, eveningAdhkar } from '@/domain/azkarData';
+import { getDeedAdhkar } from '@/domain/deedAdhkar';
 import { todayKey } from '@/domain/dates';
 import { ScreenHeader } from '@/shared/components/ScreenHeader';
 import { AdhkarList } from '@/features/adhkar/components/AdhkarList';
@@ -21,9 +21,10 @@ interface AdhkarModalProps {
 
 export function AdhkarModal({ visible, deed, date, onClose, onChange }: AdhkarModalProps) {
   const theme = useTheme();
-  const activeAdhkar = deed.definitionId === 'adhkar_morning' ? morningAdhkar : eveningAdhkar;
+  const activeAdhkar = getDeedAdhkar(deed.definitionId) ?? [];
   const totalItems = activeAdhkar.length;
-  const type = deed.definitionId === 'adhkar_morning' ? 'morning' : 'evening';
+  // Unique per-deed namespace for stored progress (date-scoped, cleaned daily).
+  const type = deed.definitionId ?? 'unknown';
 
   // State for progress inside modal
   const [progress, setProgress] = useState<number[]>([]);

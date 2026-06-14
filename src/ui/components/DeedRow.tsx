@@ -6,6 +6,7 @@ import { toArabicNumeral } from '@/i18n/format';
 import { DeedRow as DeedRowType, DeedLogRow } from '@/db/schema';
 import { CustomSlider } from '@/shared/components/CustomSlider';
 import { AdhkarModal } from '@/features/adhkar/components/AdhkarModal';
+import { hasDeedAdhkar } from '@/domain/deedAdhkar';
 
 export function DeedRow({
   deed,
@@ -23,7 +24,7 @@ export function DeedRow({
   const done = log?.status === 'done';
   const notDone = log?.status === 'not_done';
 
-  const isAdhkarDeed = deed.definitionId === 'adhkar_morning' || deed.definitionId === 'adhkar_evening';
+  const isAdhkarDeed = hasDeedAdhkar(deed.definitionId);
   const [modalVisible, setModalVisible] = useState(false);
 
   // Boolean checkbox deed
