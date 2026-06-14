@@ -247,6 +247,31 @@ Based on [UX spec](superpowers/specs/2026-06-11-ux-discussion-summary.md) and [A
 
 ---
 
+## ✅ Iteration 11 — حصن المسلم General Azkar Library (2026-06-15)
+
+Browse-only azkar/du'a reference library, fully decoupled from the daily
+scorecard. Design: `docs/superpowers/specs/2026-06-14-hisn-almuslim-azkar-library-design.md`.
+
+### Data & Generator
+- [x] Added `scripts/gen-azkar.mjs` (RFC-4180 parser, CRLF-safe) that turns the full `azkar.csv` (135 categories, Hisn al-Muslim order) into `src/domain/azkarData.ts`; runnable via `npm run gen:azkar`.
+- [x] New `azkarCategories` export (ordered `{ index, title, search, items }`); `morningAdhkar`/`eveningAdhkar` kept as derived exports so the scorecard `AdhkarModal` flow is unchanged.
+
+### UI
+- [x] Extracted shared presentational `AdhkarList` from `AdhkarModal` (progress summary + `DhikrCard` list); modal behavior identical (MMKV persistence + deed auto-complete preserved).
+- [x] New `azkar/index.tsx` — searchable category list in book order, plus a pinned "المفضلة" block.
+- [x] New `azkar/[index].tsx` — reader with ephemeral tap-to-count (no scorecard writes) and "تصفير الكل".
+- [x] New "حصن المسلم" entry in the side drawer.
+
+### Favorites
+- [x] User-customizable favorites via a star toggle on each category row, persisted in MMKV (`src/features/adhkar/favorites.ts`) and reactive via observable.
+- [x] Seeded defaults (removable): أذكار الصباح، أذكار المساء، أذكار النوم، أذكار الاستيقاظ من النوم.
+
+### Housekeeping & Tests
+- [x] Added `__tests__/domain/azkarData.test.ts` and `__tests__/ui/AdhkarList.test.tsx`.
+- [x] Full Jest suite green (48 tests) and `npx tsc --noEmit` clean.
+
+---
+
 ## 🔲 Remaining Work (by priority)
 
 ### Iteration 3 — Day Screen Polish
