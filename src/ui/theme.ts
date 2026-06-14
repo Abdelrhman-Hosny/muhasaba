@@ -1,7 +1,10 @@
 import { createMMKV } from 'react-native-mmkv';
 import { makeObservable } from '@/state/observable';
-import { useColorScheme } from 'react-native';
+import { useColorScheme, I18nManager } from 'react-native';
 import { useSyncExternalStore } from 'react';
+
+export const rtlRow: 'row' | 'row-reverse' = I18nManager.isRTL ? 'row' : 'row-reverse';
+export const rtlAlign: 'left' | 'right' = I18nManager.isRTL ? 'left' : 'right';
 
 export interface AppTheme {
   dark: boolean;
@@ -28,6 +31,8 @@ export interface AppTheme {
     onPrimary: string;
     onPrimaryMuted: string;
     switchThumb: string;
+    notDoneBg: string;
+    googleBlue: string;
   };
   spacing: (n: number) => number;
   font: string;
@@ -70,6 +75,8 @@ export const darkTheme: AppTheme = {
     onPrimary: '#ffffff',
     onPrimaryMuted: '#dfeee5', // Soft tint for secondary text on primary backgrounds
     switchThumb: '#8a9590', // Off-state knob, visible on dark track
+    notDoneBg: 'rgba(239, 68, 68, 0.08)',
+    googleBlue: '#4285F4',
   },
   spacing: (n: number) => n * 8,
   font: 'Cairo',
@@ -102,6 +109,8 @@ export const lightTheme: AppTheme = {
     onPrimary: '#ffffff',
     onPrimaryMuted: '#e6f5ee', // Soft tint for secondary text on primary backgrounds
     switchThumb: '#f4f4f4', // Off-state knob, light on light track
+    notDoneBg: 'rgba(239, 68, 68, 0.08)',
+    googleBlue: '#4285F4',
   },
   spacing: (n: number) => n * 8,
   font: 'Cairo',

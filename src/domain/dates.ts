@@ -44,8 +44,3 @@ export function editableDates(today: string, daysBack: number): string[] {
   }
   return out;
 }
-
-/** Convert a number to Western numeral string. */
-export function toArabicNumeral(n: number): string {
-  return String(n);
-}

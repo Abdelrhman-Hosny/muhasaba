@@ -113,3 +113,5 @@ export type DhikrRow = typeof dhikrs.$inferSelect;
 export type DeedRow = typeof deeds.$inferSelect;
 export type DeedLogRow = typeof deedLogs.$inferSelect;
 export type DhikrLogRow = typeof dhikrLogs.$inferSelect;
+
+export type DeedType = 'boolean' | 'measured';

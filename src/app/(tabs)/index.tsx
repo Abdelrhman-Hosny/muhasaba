@@ -3,13 +3,15 @@ import { editableDates, todayKey, weekdayIndex } from '@/domain/dates';
 import { ar } from '@/i18n/ar';
 import { toArabicNumeral } from '@/i18n/format';
 import { useScorecard, setDeedLog, useDatesPercentages, useOldestLogDate } from '@/state/deedStore';
+import { computeScorecardScore } from '@/state/scoring';
 import { DeedRow } from '@/ui/components/DeedRow';
-import { useTheme } from '@/ui/theme';
+import { useTheme, ThemeType, rtlRow } from '@/ui/theme';
 import { Ionicons } from '@expo/vector-icons';
-import { useState, useMemo, useRef, useEffect } from 'react';
-import { Pressable, ScrollView, Text, View, I18nManager, Animated } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { Pressable, ScrollView, Text, View, I18nManager, Animated, StyleSheet } from 'react-native';
+import { useSafeAreaInsets, EdgeInsets } from 'react-native-safe-area-context';
 import { Drawer } from '@/ui/components/Drawer';
+import { ProgressBar } from '@/shared/components/ProgressBar';
 
 function dayLabel(date: string, today: string): { top: string; sub: string } {
   const dd = date.slice(8); // DD
@@ -144,66 +146,80 @@ export default function DayScreen() {
 
   // Compute total points and total active tasks for the selected date
   const { totalTasks, donePoints } = useMemo(() => {
-    let total = 0;
-    let score = 0;
-    for (const sec of scorecard) {
-      for (const item of sec.items) {
-        total += 1;
-        const log = item.log;
-        if (log) {
-          if (item.deed.type === 'boolean') {
-            if (log.status === 'done') {
-              score += 1;
-            }
-          } else if (item.deed.type === 'measured' && item.deed.target) {
-            const val = log.value ?? 0;
-            score += Math.min(1.0, val / item.deed.target);
-          }
-        }
-      }
-    }
-    return { totalTasks: total, donePoints: score };
+    const allItems = scorecard.flatMap((sec) => sec.items);
+    return computeScorecardScore(allItems);
   }, [scorecard]);
 
   const todayPercentage = totalTasks > 0 ? Math.round((donePoints / totalTasks) * 100) : 0;
   const formattedScore = toArabicNumeral(Math.round(donePoints * 10) / 10);
 
+  const styles = useMemo(() => createStyles(theme, insets), [theme, insets]);
+
   return (
-    <View style={{ flex: 1, backgroundColor: theme.colors.bg, paddingTop: insets.top }}>
+    <View style={styles.container}>
       {/* Header: App Name  ☰ */}
-      <View style={{ flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse', alignItems: 'center', justifyContent: 'space-between', padding: 16 }}>
+      <View style={styles.header}>
         <Pressable hitSlop={8} onPress={() => setDrawerVisible(true)}>
           <Ionicons name="menu-outline" size={26} color={theme.colors.muted} />
         </Pressable>
-        <Text style={{ color: theme.colors.text, fontFamily: theme.fontBold, fontSize: 20, lineHeight: 30, writingDirection: 'rtl' }}>
+        <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
           {ar.appName}
         </Text>
       </View>
 
       {/* Day strip: today (right) → oldest (left) */}
-      <ScrollView ref={dateStripRef} horizontal showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ flexDirection: 'row', paddingHorizontal: 16, paddingVertical: 6, gap: 8 }}
-        style={{ flexGrow: 0 }}>
+      <ScrollView
+        ref={dateStripRef}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.dateStripContent}
+        style={styles.dateStripScroll}
+      >
         {(I18nManager.isRTL ? dates : [...dates].reverse()).map((d) => {
           const active = d === selected;
           const lbl = dayLabel(d, today);
           const pct = datePercentages[d] ?? 0;
           const pctLabel = pct > 0 ? `${toArabicNumeral(pct)}%` : '--';
           return (
-            <Pressable key={d} onPress={() => setSelected(d)}
-              style={{
-                paddingVertical: 10, paddingHorizontal: 14, borderRadius: 16,
-                alignItems: 'center', justifyContent: 'center',
-                backgroundColor: active ? theme.colors.primary : theme.colors.surface,
-                minWidth: 70
-              }}>
-              <Text style={{ fontFamily: active ? theme.fontBold : theme.font, fontSize: 14, lineHeight: 18, writingDirection: 'rtl', color: active ? theme.colors.onPrimary : theme.colors.text }}>
+            <Pressable
+              key={d}
+              onPress={() => setSelected(d)}
+              style={[
+                styles.dateBtn,
+                {
+                  backgroundColor: active ? theme.colors.primary : theme.colors.surface,
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.dateBtnTop,
+                  {
+                    fontFamily: active ? theme.fontBold : theme.font,
+                    color: active ? theme.colors.onPrimary : theme.colors.text,
+                  },
+                ]}
+              >
                 {lbl.top}
               </Text>
-              <Text style={{ fontFamily: theme.font, fontSize: 11, lineHeight: 15, color: active ? theme.colors.onPrimaryMuted : theme.colors.muted }}>
+              <Text
+                style={[
+                  styles.dateBtnSub,
+                  {
+                    color: active ? theme.colors.onPrimaryMuted : theme.colors.muted,
+                  },
+                ]}
+              >
                 {lbl.sub}
               </Text>
-              <Text style={{ fontFamily: theme.font, fontSize: 13, lineHeight: 16, color: active ? theme.colors.onPrimaryMuted : theme.colors.muted }}>
+              <Text
+                style={[
+                  styles.dateBtnPct,
+                  {
+                    color: active ? theme.colors.onPrimaryMuted : theme.colors.muted,
+                  },
+                ]}
+              >
                 {pctLabel}
               </Text>
             </Pressable>
@@ -212,29 +228,28 @@ export default function DayScreen() {
       </ScrollView>
 
       {/* Daily progress summary */}
-      <View style={{ marginHorizontal: 16, marginTop: 16, marginBottom: 4 }}>
-        <View style={{ flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-          <Text style={{ color: theme.colors.muted, fontFamily: theme.font, fontSize: 13, lineHeight: 22 }}>{ar.summary.completed}</Text>
-          <Text style={{ color: theme.colors.text, fontFamily: theme.fontBold, fontSize: 15, lineHeight: 22 }}>
+      <View style={styles.progressContainer}>
+        <View style={styles.progressHeader}>
+          <Text style={[styles.progressTitle, { color: theme.colors.muted }]}>
+            {ar.summary.completed}
+          </Text>
+          <Text style={[styles.progressValue, { color: theme.colors.text }]}>
             {`\u200E${formattedScore} / ${toArabicNumeral(totalTasks)} (${toArabicNumeral(todayPercentage)}%)`}
           </Text>
         </View>
-        <View style={{ height: 6, borderRadius: 3, backgroundColor: theme.colors.notYet, overflow: 'hidden' }}>
-          <View style={{ height: '100%', width: `${totalTasks > 0 ? (donePoints / totalTasks) * 100 : 0}%`, backgroundColor: theme.colors.primary }} />
-        </View>
+        <ProgressBar
+          value={donePoints}
+          total={totalTasks}
+          height={6}
+          trackColor={theme.colors.notYet}
+        />
       </View>
 
       {/* Scorecard Sections and Deeds List */}
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16 }}>
+      <ScrollView style={styles.listScroll} contentContainerStyle={styles.listContent}>
         {uncompletedSections.map(({ section, items }) => (
-          <View key={section.id} style={{ marginBottom: 16 }}>
-            <Text style={{
-              color: theme.colors.text,
-              fontFamily: theme.fontBold,
-              fontSize: 16,
-              textAlign: I18nManager.isRTL ? 'left' : 'right',
-              marginBottom: 8,
-            }}>
+          <View key={section.id} style={styles.sectionBlock}>
+            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
               {section.name}
             </Text>
             {items.map(({ deed, log }) => {
@@ -262,33 +277,21 @@ export default function DayScreen() {
         ))}
 
         {completedCount > 0 && (
-          <View style={{ marginTop: 8, marginBottom: 16 }}>
+          <View style={styles.completedContainer}>
             <Pressable
               onPress={() => setCompletedExpanded(!completedExpanded)}
-              style={{
-                flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                paddingVertical: 12,
-                paddingHorizontal: 16,
-                backgroundColor: theme.colors.translucentBg,
-                borderRadius: 12,
-                marginBottom: 8,
-              }}
+              style={[
+                styles.completedHeader,
+                {
+                  backgroundColor: theme.colors.translucentBg,
+                },
+              ]}
             >
-              <View style={{ flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse', alignItems: 'center', gap: 8 }}>
-                <Text style={{
-                  color: theme.colors.muted,
-                  fontFamily: theme.fontBold,
-                  fontSize: 16,
-                }}>
+              <View style={styles.completedTitleBlock}>
+                <Text style={[styles.completedTitleText, { color: theme.colors.muted }]}>
                   {ar.summary.completedSection}
                 </Text>
-                <Text style={{
-                  color: theme.colors.muted,
-                  fontFamily: theme.font,
-                  fontSize: 14,
-                }}>
+                <Text style={[styles.completedCountText, { color: theme.colors.muted }]}>
                   {`(${toArabicNumeral(completedCount)})`}
                 </Text>
               </View>
@@ -300,12 +303,16 @@ export default function DayScreen() {
             </Pressable>
 
             {completedExpanded && (
-              <View style={{ marginTop: 4 }}>
+              <View style={styles.completedContent}>
                 {doneItems.length > 0 && (
-                  <View style={{ marginBottom: skippedItems.length > 0 ? 16 : 0 }}>
-                    <View style={{ flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                  <View
+                    style={{
+                      marginBottom: skippedItems.length > 0 ? 16 : 0,
+                    }}
+                  >
+                    <View style={styles.subsectionHeader}>
                       <Ionicons name="checkmark-circle" size={16} color={theme.colors.primary} />
-                      <Text style={{ color: theme.colors.muted, fontFamily: theme.fontBold, fontSize: 14 }}>
+                      <Text style={[styles.subsectionTitle, { color: theme.colors.muted }]}>
                         {`${ar.summary.doneSection} (${toArabicNumeral(doneItems.length)})`}
                       </Text>
                     </View>
@@ -323,9 +330,9 @@ export default function DayScreen() {
 
                 {skippedItems.length > 0 && (
                   <View>
-                    <View style={{ flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                    <View style={styles.subsectionHeader}>
                       <Ionicons name="close-circle" size={16} color={theme.colors.missed} />
-                      <Text style={{ color: theme.colors.muted, fontFamily: theme.fontBold, fontSize: 14 }}>
+                      <Text style={[styles.subsectionTitle, { color: theme.colors.muted }]}>
                         {`${ar.summary.skippedSection} (${toArabicNumeral(skippedItems.length)})`}
                       </Text>
                     </View>
@@ -349,4 +356,133 @@ export default function DayScreen() {
       <Drawer visible={drawerVisible} onClose={() => setDrawerVisible(false)} />
     </View>
   );
+}
+
+function createStyles(theme: ThemeType, insets: EdgeInsets) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.bg,
+      paddingTop: insets.top,
+    },
+    header: {
+      flexDirection: rtlRow,
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: 16,
+    },
+    headerTitle: {
+      fontFamily: theme.fontBold,
+      fontSize: 20,
+      lineHeight: 30,
+      writingDirection: 'rtl',
+    },
+    dateStripScroll: {
+      flexGrow: 0,
+    },
+    dateStripContent: {
+      flexDirection: 'row',
+      paddingHorizontal: 16,
+      paddingVertical: 6,
+      gap: 8,
+    },
+    dateBtn: {
+      paddingVertical: 10,
+      paddingHorizontal: 14,
+      borderRadius: 16,
+      alignItems: 'center',
+      justifyContent: 'center',
+      minWidth: 70,
+    },
+    dateBtnTop: {
+      fontSize: 14,
+      lineHeight: 18,
+      writingDirection: 'rtl',
+    },
+    dateBtnSub: {
+      fontFamily: theme.font,
+      fontSize: 11,
+      lineHeight: 15,
+    },
+    dateBtnPct: {
+      fontFamily: theme.font,
+      fontSize: 13,
+      lineHeight: 16,
+    },
+    progressContainer: {
+      marginHorizontal: 16,
+      marginTop: 16,
+      marginBottom: 4,
+    },
+    progressHeader: {
+      flexDirection: rtlRow,
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 8,
+    },
+    progressTitle: {
+      fontFamily: theme.font,
+      fontSize: 13,
+      lineHeight: 22,
+    },
+    progressValue: {
+      fontFamily: theme.fontBold,
+      fontSize: 15,
+      lineHeight: 22,
+    },
+    listScroll: {
+      flex: 1,
+    },
+    listContent: {
+      padding: 16,
+    },
+    sectionBlock: {
+      marginBottom: 16,
+    },
+    sectionTitle: {
+      fontFamily: theme.fontBold,
+      fontSize: 16,
+      textAlign: I18nManager.isRTL ? 'left' : 'right',
+      marginBottom: 8,
+    },
+    completedContainer: {
+      marginTop: 8,
+      marginBottom: 16,
+    },
+    completedHeader: {
+      flexDirection: rtlRow,
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      borderRadius: 12,
+      marginBottom: 8,
+    },
+    completedTitleBlock: {
+      flexDirection: rtlRow,
+      alignItems: 'center',
+      gap: 8,
+    },
+    completedTitleText: {
+      fontFamily: theme.fontBold,
+      fontSize: 16,
+    },
+    completedCountText: {
+      fontFamily: theme.font,
+      fontSize: 14,
+    },
+    completedContent: {
+      marginTop: 4,
+    },
+    subsectionHeader: {
+      flexDirection: rtlRow,
+      alignItems: 'center',
+      gap: 6,
+      marginBottom: 8,
+    },
+    subsectionTitle: {
+      fontFamily: theme.fontBold,
+      fontSize: 14,
+    },
+  });
 }

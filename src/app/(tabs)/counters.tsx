@@ -1,13 +1,15 @@
-import { useState, useEffect } from 'react';
-import { View, Text, Pressable, ScrollView, TextInput, Modal, I18nManager } from 'react-native';
+import React, { useState, useEffect, useMemo } from 'react';
+import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useTheme } from '@/ui/theme';
+import { useTheme, ThemeType, rtlRow } from '@/ui/theme';
 import { ar } from '@/i18n/ar';
-import { toArabicNumeral } from '@/i18n/format';
 import { useDhikrs, incrementDhikrCount, addDhikrCounter, deleteDhikrCounter } from '@/state/deedStore';
 import { todayKey } from '@/domain/dates';
 import { Ionicons } from '@expo/vector-icons';
 import { Drawer } from '@/ui/components/Drawer';
+import { CounterList } from '@/features/counters/components/CounterList';
+import { KeypadPanel } from '@/features/counters/components/KeypadPanel';
+import { AddCounterModal } from '@/features/counters/components/AddCounterModal';
 
 export default function CountersScreen() {
   const theme = useTheme();
@@ -17,12 +19,10 @@ export default function CountersScreen() {
 
   // States
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [customValue, setCustomValue] = useState<string>('');
   const [modalVisible, setModalVisible] = useState(false);
   const [drawerVisible, setDrawerVisible] = useState(false);
-  const [mode, setMode] = useState<'add' | 'sub'>('add');
-  const [newName, setNewName] = useState('');
-  const [newTarget, setNewTarget] = useState('');
+
+  const styles = useMemo(() => createStyles(theme, insets.top), [theme, insets.top]);
 
   // Auto-select the first counter if none is selected
   useEffect(() => {
@@ -36,16 +36,7 @@ export default function CountersScreen() {
 
   const handleIncrement = async (amount: number) => {
     if (!selectedId) return;
-    const finalAmount = mode === 'add' ? amount : -amount;
-    await incrementDhikrCount(today, selectedId, finalAmount);
-  };
-
-  const handleCustomSubmit = async () => {
-    const val = parseInt(customValue, 10);
-    if (isNaN(val) || val <= 0 || !selectedId) return;
-    const finalAmount = mode === 'add' ? val : -val;
-    await incrementDhikrCount(today, selectedId, finalAmount);
-    setCustomValue('');
+    await incrementDhikrCount(today, selectedId, amount);
   };
 
   const handleReset = async () => {
@@ -53,12 +44,8 @@ export default function CountersScreen() {
     await incrementDhikrCount(today, selectedId, -currentCount);
   };
 
-  const handleAddCounter = async () => {
-    if (!newName.trim()) return;
-    const targetVal = newTarget ? parseInt(newTarget, 10) : null;
-    await addDhikrCounter(newName.trim(), isNaN(targetVal as any) ? null : targetVal);
-    setNewName('');
-    setNewTarget('');
+  const handleAddCounter = async (name: string, target: number | null) => {
+    await addDhikrCounter(name, target);
     setModalVisible(false);
   };
 
@@ -70,398 +57,93 @@ export default function CountersScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: theme.colors.bg, paddingTop: insets.top }}>
+    <View style={styles.container}>
       {/* Header */}
-      <View style={{ flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse', alignItems: 'center', justifyContent: 'space-between', padding: 16 }}>
+      <View style={styles.header}>
         <Pressable testID="btn-drawer-toggle" hitSlop={8} onPress={() => setDrawerVisible(true)}>
           <Ionicons name="menu-outline" size={26} color={theme.colors.muted} />
         </Pressable>
-        <View style={{ flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse', alignItems: 'center', gap: 12 }}>
-          <Text style={{ color: theme.colors.text, fontFamily: theme.font, fontSize: 20, fontWeight: 'bold' }}>
+        <View style={styles.headerRight}>
+          <Text style={[styles.headerTitle, { color: theme.colors.text }]}>
             {ar.counters.title}
           </Text>
           <Pressable
             testID="btn-new-counter"
             hitSlop={8}
             onPress={() => setModalVisible(true)}
-            style={{
-              flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse',
-              alignItems: 'center',
-              gap: 4,
-              backgroundColor: theme.colors.translucentBgActive,
-              paddingVertical: 6,
-              paddingHorizontal: 10,
-              borderRadius: 12,
-            }}
+            style={styles.newCounterBtn}
           >
             <Ionicons name="add" size={20} color={theme.colors.primary} />
-            <Text style={{ color: theme.colors.primary, fontFamily: theme.font, fontSize: 14 }}>
+            <Text style={[styles.newCounterText, { color: theme.colors.primary }]}>
               جديد
             </Text>
           </Pressable>
         </View>
       </View>
 
-      {/* Split view list (Scrollable) */}
-      <ScrollView
-        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 20 }}
-        style={{ flex: 1 }}
-      >
-        {dhikrsList.length === 0 ? (
-          <View style={{ alignItems: 'center', marginTop: 40 }}>
-            <Text style={{ color: theme.colors.muted, fontFamily: theme.font, textAlign: 'center', fontSize: 16 }}>
-              {ar.counters.noCounters}
-            </Text>
-          </View>
-        ) : (
-          dhikrsList.map(({ dhikr, log }) => {
-            const active = dhikr.id === selectedId;
-            const count = log?.count ?? 0;
-            const target = dhikr.target;
-            const hasTarget = target !== null && target > 0;
-            const completed = hasTarget && count >= (target ?? 0);
-            const progressPct = hasTarget ? Math.min(100, (count / (target ?? 1)) * 100) : 0;
-
-            return (
-              <Pressable
-                key={dhikr.id}
-                testID={`counter-row-${dhikr.id}`}
-                onPress={() => setSelectedId(dhikr.id)}
-                style={{
-                  backgroundColor: active ? theme.colors.surfaceDone : theme.colors.surface,
-                  borderWidth: 1.5,
-                  borderColor: active ? theme.colors.primary : theme.colors.translucentBorder,
-                  borderRadius: 14,
-                  marginBottom: 10,
-                  overflow: 'hidden',
-                  elevation: active ? 1 : 0,
-                }}
-              >
-                <View style={{
-                  flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  paddingVertical: 12,
-                  paddingHorizontal: 16,
-                }}>
-                  <View style={{ flexDirection: 'column', alignItems: I18nManager.isRTL ? 'flex-start' : 'flex-end', flex: 1, paddingRight: I18nManager.isRTL ? 0 : 8, paddingLeft: I18nManager.isRTL ? 8 : 0 }}>
-                    <Text style={{ color: theme.colors.text, fontFamily: theme.font, fontSize: 18, fontWeight: 'bold', writingDirection: 'rtl' }}>
-                      {dhikr.name}
-                    </Text>
-                    <View style={{ flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse', alignItems: 'center', gap: 6, marginTop: 2 }}>
-                      <Text style={{ color: completed ? theme.colors.primary : theme.colors.muted, fontFamily: theme.font, fontSize: 14 }}>
-                        {`\u200E${toArabicNumeral(count)}${hasTarget ? ` / ${toArabicNumeral(target ?? 0)}` : ''}`}
-                      </Text>
-                    </View>
-                  </View>
-
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                    {/* Delete Button */}
-                    <Pressable
-                      testID={`btn-delete-${dhikr.id}`}
-                      onPress={() => handleDelete(dhikr.id)}
-                      hitSlop={8}
-                      style={{ padding: 4 }}
-                    >
-                      <Ionicons name="trash-outline" size={20} color={theme.colors.muted} />
-                    </Pressable>
-                  </View>
-                </View>
-
-                {/* Progress toward target \u2014 fills the card width meaningfully */}
-                {hasTarget && (
-                  <View style={{ height: 4, backgroundColor: theme.colors.translucentBorder, width: '100%' }}>
-                    <View style={{ height: '100%', width: `${progressPct}%`, backgroundColor: theme.colors.primary }} />
-                  </View>
-                )}
-              </Pressable>
-            );
-          })
-        )}
-      </ScrollView>
+      {/* Counter List */}
+      <CounterList
+        dhikrsList={dhikrsList}
+        selectedId={selectedId}
+        onSelect={setSelectedId}
+        onDelete={handleDelete}
+      />
 
       {/* Persistent Keypad Panel */}
       {selectedId && (
-        <View
-          style={{
-            borderTopWidth: 1,
-            borderTopColor: theme.colors.translucentBorderStrong,
-            padding: 16,
-            paddingBottom: 16,
-            backgroundColor: theme.colors.surface,
-          }}
-        >
-          {/* Keypad Grid */}
-          <View style={{ flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse', gap: 10, marginBottom: 10 }}>
-            {[1, 5, 10].map((amount) => {
-              return (
-                <Pressable
-                  key={amount}
-                  testID={`btn-keypad-${amount}`}
-                  onPress={() => handleIncrement(amount)}
-                  style={{
-                    flex: 1,
-                    height: 48,
-                    borderRadius: 12,
-                    backgroundColor: theme.colors.surfaceDone,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderWidth: 1,
-                    borderColor: theme.colors.primary,
-                  }}
-                >
-                  <Text style={{ fontFamily: theme.font, fontSize: 18, color: theme.colors.primary, fontWeight: 'bold', writingDirection: 'ltr' }}>
-                    {mode === 'add' ? '+' : '-'}{toArabicNumeral(amount)}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-
-          <View style={{ flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse', gap: 10, marginBottom: 12 }}>
-            {[25, 50, 100].map((amount) => {
-              return (
-                <Pressable
-                  key={amount}
-                  testID={`btn-keypad-${amount}`}
-                  onPress={() => handleIncrement(amount)}
-                  style={{
-                    flex: 1,
-                    height: 48,
-                    borderRadius: 12,
-                    backgroundColor: theme.colors.surfaceDone,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderWidth: 1,
-                    borderColor: theme.colors.primary,
-                  }}
-                >
-                  <Text style={{ fontFamily: theme.font, fontSize: 18, color: theme.colors.primary, fontWeight: 'bold', writingDirection: 'ltr' }}>
-                    {mode === 'add' ? '+' : '-'}{toArabicNumeral(amount)}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-
-          {/* Custom entry & Mode / Reset */}
-          <View style={{ flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse', alignItems: 'center', gap: 10 }}>
-            {/* Custom Input */}
-            <View style={{ flex: 1.8, height: 48, flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse', alignItems: 'center', backgroundColor: theme.colors.translucentBgActive, borderRadius: 12, paddingHorizontal: 12 }}>
-              <TextInput
-                testID="input-custom-count"
-                placeholder={ar.counters.custom}
-                placeholderTextColor={theme.colors.placeholderText}
-                keyboardType="number-pad"
-                value={customValue}
-                onChangeText={(text) => setCustomValue(text.replace(/[^0-9]/g, ''))}
-                onSubmitEditing={handleCustomSubmit}
-                returnKeyType="done"
-                style={{
-                  fontFamily: theme.font,
-                  flex: 1,
-                  fontSize: 16,
-                  color: theme.colors.text,
-                  textAlign: I18nManager.isRTL ? 'left' : 'right',
-                  height: '100%',
-                }}
-              />
-              {customValue.length > 0 && (
-                <Pressable
-                  testID="btn-custom-submit-inline"
-                  onPress={handleCustomSubmit}
-                  hitSlop={8}
-                  style={{
-                    padding: 4,
-                    marginRight: 4,
-                  }}
-                >
-                  <Ionicons name="checkmark-circle" size={24} color={theme.colors.primary} />
-                </Pressable>
-              )}
-            </View>
-
-            {/* Mode Toggle Segmented */}
-            <View style={{ flex: 1.2, height: 48, flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse', backgroundColor: theme.colors.translucentBgActive, borderRadius: 12, padding: 3 }}>
-              <Pressable
-                testID="btn-mode-add"
-                onPress={() => setMode('add')}
-                style={{
-                  flex: 1,
-                  borderRadius: 9,
-                  backgroundColor: mode === 'add' ? theme.colors.primary : 'transparent',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <Text style={{ fontFamily: theme.font, fontSize: 16, fontWeight: 'bold', color: mode === 'add' ? theme.colors.onPrimary : theme.colors.muted }}>
-                  +
-                </Text>
-              </Pressable>
-              <Pressable
-                testID="btn-mode-sub"
-                onPress={() => setMode('sub')}
-                style={{
-                  flex: 1,
-                  borderRadius: 9,
-                  backgroundColor: mode === 'sub' ? theme.colors.primary : 'transparent',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <Text style={{ fontFamily: theme.font, fontSize: 16, fontWeight: 'bold', color: mode === 'sub' ? theme.colors.onPrimary : theme.colors.muted }}>
-                  -
-                </Text>
-              </Pressable>
-            </View>
-
-            {/* Reset */}
-            <Pressable
-              testID="btn-reset"
-              onPress={handleReset}
-              style={{
-                flex: 1,
-                height: 48,
-                borderRadius: 12,
-                backgroundColor: 'rgba(239, 68, 68, 0.08)',
-                borderWidth: 1,
-                borderColor: theme.colors.missed,
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Text style={{ fontFamily: theme.font, fontSize: 16, color: theme.colors.missed, fontWeight: 'bold' }}>
-                {ar.counters.reset}
-              </Text>
-            </Pressable>
-          </View>
-        </View>
+        <KeypadPanel
+          onIncrement={handleIncrement}
+          onReset={handleReset}
+        />
       )}
 
       {/* Add New Counter Modal */}
-      <Modal
-        animationType="slide"
-        transparent={true}
+      <AddCounterModal
         visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View
-          style={{
-            flex: 1,
-            justifyContent: 'center',
-            alignItems: 'center',
-            backgroundColor: theme.colors.overlayBg,
-          }}
-        >
-          <View
-            style={{
-              width: '85%',
-              backgroundColor: theme.colors.surface,
-              borderRadius: 20,
-              padding: 24,
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.25,
-              shadowRadius: 4,
-              elevation: 5,
-            }}
-          >
-            <Text
-              style={{
-                fontFamily: theme.font,
-                fontSize: 20,
-                fontWeight: 'bold',
-                color: theme.colors.text,
-                textAlign: 'center',
-                marginBottom: 20,
-              }}
-            >
-              {ar.counters.newCounter}
-            </Text>
+        onClose={() => setModalVisible(false)}
+        onSave={handleAddCounter}
+      />
 
-            {/* Name input */}
-            <TextInput
-              testID="input-new-name"
-              placeholder={ar.counters.name}
-              placeholderTextColor={theme.colors.placeholderText}
-              value={newName}
-              onChangeText={setNewName}
-              style={{
-                fontFamily: theme.font,
-                width: '100%',
-                height: 48,
-                backgroundColor: theme.colors.translucentBgActive,
-                borderRadius: 12,
-                paddingHorizontal: 16,
-                fontSize: 16,
-                textAlign: I18nManager.isRTL ? 'right' : 'left',
-                color: theme.colors.text,
-                marginBottom: 12,
-              }}
-            />
-
-            {/* Target input */}
-            <TextInput
-              testID="input-new-target"
-              placeholder={ar.counters.targetOptional}
-              placeholderTextColor={theme.colors.placeholderText}
-              keyboardType="number-pad"
-              value={newTarget}
-              onChangeText={(text) => setNewTarget(text.replace(/[^0-9]/g, ''))}
-              style={{
-                fontFamily: theme.font,
-                width: '100%',
-                height: 48,
-                backgroundColor: theme.colors.translucentBgActive,
-                borderRadius: 12,
-                paddingHorizontal: 16,
-                fontSize: 16,
-                textAlign: I18nManager.isRTL ? 'right' : 'left',
-                color: theme.colors.text,
-                marginBottom: 24,
-              }}
-            />
-
-            {/* Modal Actions */}
-            <View style={{ flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse', gap: 12 }}>
-              <Pressable
-                testID="btn-modal-add"
-                onPress={handleAddCounter}
-                style={{
-                  flex: 1,
-                  height: 48,
-                  borderRadius: 12,
-                  backgroundColor: theme.colors.primary,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <Text style={{ fontFamily: theme.font, fontSize: 16, color: theme.colors.onPrimary, fontWeight: 'bold' }}>
-                  {ar.counters.add}
-                </Text>
-              </Pressable>
-
-              <Pressable
-                testID="btn-modal-cancel"
-                onPress={() => setModalVisible(false)}
-                style={{
-                  flex: 1,
-                  height: 48,
-                  borderRadius: 12,
-                  backgroundColor: theme.colors.translucentBg,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <Text style={{ fontFamily: theme.font, fontSize: 16, color: theme.colors.muted }}>
-                  {ar.counters.cancel}
-                </Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </Modal>
       <Drawer visible={drawerVisible} onClose={() => setDrawerVisible(false)} />
     </View>
   );
+}
+
+function createStyles(theme: ThemeType, paddingTop: number) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.bg,
+      paddingTop,
+    },
+    header: {
+      flexDirection: rtlRow,
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: 16,
+    },
+    headerRight: {
+      flexDirection: rtlRow,
+      alignItems: 'center',
+      gap: 12,
+    },
+    headerTitle: {
+      fontFamily: theme.font,
+      fontSize: 20,
+      fontWeight: 'bold',
+    },
+    newCounterBtn: {
+      flexDirection: rtlRow,
+      alignItems: 'center',
+      gap: 4,
+      backgroundColor: theme.colors.translucentBgActive,
+      paddingVertical: 6,
+      paddingHorizontal: 10,
+      borderRadius: 12,
+    },
+    newCounterText: {
+      fontFamily: theme.font,
+      fontSize: 14,
+    },
+  });
 }

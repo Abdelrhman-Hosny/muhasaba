@@ -3,17 +3,13 @@ import { View, Text, StyleSheet, TextInput, ScrollView, Pressable, I18nManager }
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useTheme, ThemeType } from '@/ui/theme';
+import { useTheme, ThemeType, rtlRow } from '@/ui/theme';
 import { useDeedDefinitions, useScorecardStructure, addDeed, addDhikrCounter } from '@/state/deedStore';
+import { useActiveDefinitionIds } from '@/shared/hooks/useActiveDefinitionIds';
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
 import { db } from '@/db/client';
 import { dhikrs, DhikrRow } from '@/db/schema';
 import { eq } from 'drizzle-orm';
-
-if (!I18nManager.isRTL) {
-  I18nManager.allowRTL(true);
-  I18nManager.forceRTL(true);
-}
 
 export default function DeedsLibraryScreen() {
   const router = useRouter();
@@ -32,15 +28,7 @@ export default function DeedsLibraryScreen() {
   );
 
   // Set of all definition IDs currently active in the user's scorecard
-  const activeDefinitionIds = useMemo(() => {
-    const ids = new Set<string>();
-    for (const sec of scorecardStructure) {
-      for (const d of sec.deeds) {
-        if (d.definitionId) ids.add(d.definitionId);
-      }
-    }
-    return ids;
-  }, [scorecardStructure]);
+  const activeDefinitionIds = useActiveDefinitionIds(scorecardStructure);
 
   // Group definitions by bundle
   const { bundles, standalone } = useMemo(() => {
@@ -230,23 +218,26 @@ export default function DeedsLibraryScreen() {
         {/* Standalone Deeds */}
         {filteredStandalone.length > 0 && (
           <View style={styles.sectionContainer}>
-            <Text style={styles.sectionTitle}>-- عبادات فردية --</Text>
-            {filteredStandalone.map(item => {
-              const isActive = activeDefinitionIds.has(item.id);
-              return (
-                <View key={item.id} style={styles.deedItem}>
-                  <Text style={styles.deedName}>{item.name}</Text>
-                  <Pressable 
-                    style={[styles.checkbox, isActive && styles.checkboxActive]}
-                    onPress={() => {
-                      if (!isActive) handleAddDeed(item);
-                    }}
-                  >
-                    {isActive && <Ionicons name="checkmark" size={16} color={theme.colors.onPrimary} />}
-                  </Pressable>
-                </View>
-              );
-            })}
+            <Text style={styles.sectionTitle}>عبادات فردية</Text>
+            <View style={styles.standaloneCard}>
+              {filteredStandalone.map((item, index) => {
+                const isActive = activeDefinitionIds.has(item.id);
+                const isLast = index === filteredStandalone.length - 1;
+                return (
+                  <View key={item.id} style={[styles.deedItem, isLast && { borderBottomWidth: 0 }]}>
+                    <Text style={styles.deedName}>{item.name}</Text>
+                    <Pressable 
+                      style={[styles.checkbox, isActive && styles.checkboxActive]}
+                      onPress={() => {
+                        if (!isActive) handleAddDeed(item);
+                      }}
+                    >
+                      {isActive && <Ionicons name="checkmark" size={16} color={theme.colors.onPrimary} />}
+                    </Pressable>
+                  </View>
+                );
+              })}
+            </View>
           </View>
         )}
 
@@ -275,7 +266,7 @@ function createStyles(theme: ThemeType) {
       backgroundColor: theme.colors.bg,
     },
     header: {
-      flexDirection: 'row',
+      flexDirection: rtlRow,
       alignItems: 'center',
       justifyContent: 'space-between',
       paddingHorizontal: 20,
@@ -297,7 +288,7 @@ function createStyles(theme: ThemeType) {
       fontFamily: theme.fontBold,
     },
     searchContainer: {
-      flexDirection: 'row',
+      flexDirection: rtlRow,
       alignItems: 'center',
       backgroundColor: theme.colors.translucentBg,
       margin: 20,
@@ -326,14 +317,14 @@ function createStyles(theme: ThemeType) {
       borderColor: theme.colors.translucentBorder,
     },
     bundleHeader: {
-      flexDirection: 'row',
+      flexDirection: rtlRow,
       alignItems: 'center',
       justifyContent: 'space-between',
       padding: 16,
       backgroundColor: theme.colors.translucentBgActive,
     },
     bundleTitleRow: {
-      flexDirection: 'row',
+      flexDirection: rtlRow,
       alignItems: 'center',
       gap: 10,
     },
@@ -348,16 +339,25 @@ function createStyles(theme: ThemeType) {
     sectionContainer: {
       marginHorizontal: 20,
       marginTop: 10,
+      marginBottom: 24,
     },
     sectionTitle: {
-      fontSize: 14,
-      color: theme.colors.placeholderText,
-      fontFamily: theme.font,
+      fontSize: 16,
+      color: theme.colors.primary,
+      fontFamily: theme.fontBold,
       marginBottom: 10,
-      textAlign: 'center',
+      marginHorizontal: 4,
+      textAlign: I18nManager.isRTL ? 'left' : 'right',
+    },
+    standaloneCard: {
+      backgroundColor: theme.colors.translucentBg,
+      borderRadius: 16,
+      overflow: 'hidden',
+      borderWidth: 1,
+      borderColor: theme.colors.translucentBorder,
     },
     deedItem: {
-      flexDirection: 'row',
+      flexDirection: rtlRow,
       alignItems: 'center',
       justifyContent: 'space-between',
       paddingVertical: 14,
@@ -403,7 +403,7 @@ function createStyles(theme: ThemeType) {
       borderTopColor: theme.colors.translucentBorder,
     },
     customBtn: {
-      flexDirection: 'row',
+      flexDirection: rtlRow,
       alignItems: 'center',
       justifyContent: 'center',
       height: 50,

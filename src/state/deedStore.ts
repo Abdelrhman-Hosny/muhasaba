@@ -7,6 +7,7 @@ import { user$ } from '@/state/auth';
 import { scheduleSync } from '@/state/sync';
 import { todayKey, weekdayIndex } from '@/domain/dates';
 import * as Crypto from 'expo-crypto';
+import { computeScorecardScore } from '@/state/scoring';
 
 export const localLogId = (date: string, refId: string) => `${date}:${refId}`;
 
@@ -343,24 +344,13 @@ export function useDatesPercentages(dates: string[]): Record<string, number> {
         continue;
       }
 
-      let scoreSum = 0;
       const dayLogs = logIndex[d];
-
-      for (const deed of activeDeeds) {
-        const log = dayLogs[deed.id];
-        if (!log) continue;
-
-        if (deed.type === 'boolean') {
-          if (log.status === 'done') {
-            scoreSum += 1.0;
-          }
-        } else if (deed.type === 'measured' && deed.target) {
-          const val = log.value ?? 0;
-          scoreSum += Math.min(1.0, val / deed.target);
-        }
-      }
-
-      percentages[d] = Math.round((scoreSum / activeDeeds.length) * 100);
+      const itemsForScoring = activeDeeds.map((deed) => ({
+        deed,
+        log: dayLogs[deed.id] || null,
+      }));
+      const { totalTasks, donePoints } = computeScorecardScore(itemsForScoring);
+      percentages[d] = totalTasks > 0 ? Math.round((donePoints / totalTasks) * 100) : 0;
     }
 
     return percentages;
