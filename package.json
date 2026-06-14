@@ -55,7 +55,8 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "test": "jest"
+    "test": "jest",
+    "gen:azkar": "node scripts/gen-azkar.mjs"
   },
   "private": true
 }

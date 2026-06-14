@@ -14,6 +14,8 @@ const EVENING_TITLE = 'أذكار المساء';
 
 // RFC-4180 parser → array of string[] rows.
 function parseCsv(text) {
+  // Normalize line endings so \r never leaks into quoted field values.
+  text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
   const rows = [];
   let row = [];
   let field = '';
@@ -31,8 +33,6 @@ function parseCsv(text) {
       row.push(field); field = '';
     } else if (c === '\n') {
       row.push(field); rows.push(row); row = []; field = '';
-    } else if (c === '\r') {
-      // ignore; handled by following \n
     } else field += c;
   }
   if (field.length > 0 || row.length > 0) { row.push(field); rows.push(row); }
@@ -63,6 +63,7 @@ for (const r of rows) {
   byCat.get(title).push({
     dhikr: (r[ci.zekr] ?? '').trim(),
     description: (r[ci.description] ?? '').trim(),
+    // Blank or invalid count defaults to 1 (recite once) — CSV convention for most rows.
     count: Number.isFinite(count) && count > 0 ? count : 1,
     reference: (r[ci.reference] ?? '').trim(),
     _search: (r[ci.search] ?? '').trim(),
@@ -71,7 +72,7 @@ for (const r of rows) {
 
 const categories = order.map((title, index) => {
   const items = byCat.get(title);
-  const search = [title, ...items.map((it) => it._search)].join(' ').trim();
+  const search = [...new Set([title, ...items.map((it) => it._search)])].join(' ').trim();
   return {
     index,
     title,

@@ -23,4 +23,12 @@ describe('azkarData (generated)', () => {
     expect(morningAdhkar.length).toBeGreaterThan(0);
     expect(eveningAdhkar.length).toBeGreaterThan(0);
   });
+
+  it('has no stray carriage returns in dhikr text', () => {
+    for (const c of azkarCategories) {
+      for (const it of c.items) {
+        expect(it.dhikr).not.toMatch(/\r/);
+      }
+    }
+  });
 });
