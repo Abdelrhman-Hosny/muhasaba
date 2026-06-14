@@ -6,14 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme, ThemeType, rtlRow } from '@/ui/theme';
 import { azkarCategories, AdhkarCategory } from '@/domain/azkarData';
 import { toArabicNumeral } from '@/i18n/format';
-
-const FAVORITE_TITLES = [
-  'أذكار الصباح',
-  'أذكار المساء',
-  'أذكار النوم',
-  'الأذكار بعد السلام من الصلاة',
-  'أذكار الاستيقاظ من النوم',
-];
+import { useFavorites, toggleFavorite } from '@/features/adhkar/favorites';
 
 export default function AzkarLibraryScreen() {
   const router = useRouter();
@@ -21,13 +14,11 @@ export default function AzkarLibraryScreen() {
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const [searchQuery, setSearchQuery] = useState('');
+  const favoriteSet = useFavorites();
 
   const favorites = useMemo(
-    () =>
-      FAVORITE_TITLES
-        .map((t) => azkarCategories.find((c) => c.title === t))
-        .filter((c): c is AdhkarCategory => Boolean(c)),
-    []
+    () => azkarCategories.filter((c) => favoriteSet.has(c.title)),
+    [favoriteSet]
   );
 
   const filtered = useMemo(() => {
@@ -39,15 +30,25 @@ export default function AzkarLibraryScreen() {
   const open = (category: AdhkarCategory) =>
     router.push({ pathname: '/azkar/[index]', params: { index: String(category.index) } });
 
-  const Row = ({ category }: { category: AdhkarCategory }) => (
-    <Pressable style={styles.row} onPress={() => open(category)}>
-      <View style={styles.rowText}>
-        <Text style={styles.rowTitle}>{category.title}</Text>
-        <Text style={styles.rowCount}>{toArabicNumeral(category.items.length)}</Text>
-      </View>
-      <Ionicons name={I18nManager.isRTL ? 'chevron-back' : 'chevron-forward'} size={18} color={theme.colors.placeholderText} />
-    </Pressable>
-  );
+  const Row = ({ category }: { category: AdhkarCategory }) => {
+    const isFav = favoriteSet.has(category.title);
+    return (
+      <Pressable style={styles.row} onPress={() => open(category)}>
+        <View style={styles.rowText}>
+          <Pressable hitSlop={8} onPress={() => toggleFavorite(category.title)} style={styles.starBtn}>
+            <Ionicons
+              name={isFav ? 'star' : 'star-outline'}
+              size={18}
+              color={isFav ? theme.colors.primary : theme.colors.placeholderText}
+            />
+          </Pressable>
+          <Text style={styles.rowTitle}>{category.title}</Text>
+          <Text style={styles.rowCount}>{toArabicNumeral(category.items.length)}</Text>
+        </View>
+        <Ionicons name={I18nManager.isRTL ? 'chevron-back' : 'chevron-forward'} size={18} color={theme.colors.placeholderText} />
+      </Pressable>
+    );
+  };
 
   const showSections = searchQuery.trim().length === 0;
 
@@ -157,6 +158,7 @@ function createStyles(theme: ThemeType) {
       borderBottomColor: theme.colors.translucentBorder,
     },
     rowText: { flexDirection: rtlRow, alignItems: 'center', gap: 10, flex: 1 },
+    starBtn: { padding: 2 },
     rowTitle: { fontSize: 15, color: theme.colors.text, fontFamily: theme.font },
     rowCount: { fontSize: 12, color: theme.colors.placeholderText, fontFamily: theme.font },
   });
