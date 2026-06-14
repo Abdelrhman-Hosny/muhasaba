@@ -11,7 +11,7 @@ export const ar = {
     signInPrompt: 'سجّل الدخول لحفظ بياناتك ومزامنتها',
   },
   sync: { synced: 'متزامن', syncing: 'جارٍ المزامنة…', offline: 'دون اتصال', localOnly: 'محلي فقط', idle: 'في الانتظار', error: 'خطأ في المزامنة' },
-  drawer: { stats: 'الإحصائيات', settings: 'تعديل الجدول والعبادات', account: 'الحساب', version: 'الإصدار ' },
+  drawer: { stats: 'الإحصائيات', settings: 'تعديل الجدول والعبادات', account: 'الحساب', azkar: 'حصن المسلم', version: 'الإصدار ' },
   tabs: { day: 'اليوم', week: 'الأسبوع', counters: 'الأذكار' },
   days: { today: 'اليوم', yesterday: 'أمس' },
   summary: { completed: 'صلوات مكتملة', completedSection: 'تم إنجازها / تجاوزها', doneSection: 'تم إنجازها', skippedSection: 'تجاوزها' },

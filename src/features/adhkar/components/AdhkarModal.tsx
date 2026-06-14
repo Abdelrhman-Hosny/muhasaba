@@ -1,15 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Pressable, ScrollView, Modal, I18nManager } from 'react-native';
+import { View, Text, Pressable, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { createMMKV } from 'react-native-mmkv';
 import { useTheme } from '@/ui/theme';
-import { toArabicNumeral } from '@/i18n/format';
 import { DeedRow as DeedRowType } from '@/db/schema';
 import { morningAdhkar, eveningAdhkar } from '@/domain/azkarData';
 import { todayKey } from '@/domain/dates';
 import { ScreenHeader } from '@/shared/components/ScreenHeader';
-import { ProgressBar } from '@/shared/components/ProgressBar';
-import { DhikrCard } from '@/features/adhkar/components/DhikrCard';
+import { AdhkarList } from '@/features/adhkar/components/AdhkarList';
 
 const adhkarStorage = createMMKV({ id: 'muhassaba-adhkar-progress' });
 
@@ -80,9 +78,6 @@ export function AdhkarModal({ visible, deed, date, onClose, onChange }: AdhkarMo
     setProgress(new Array(totalItems).fill(0));
   };
 
-  const completedCount = progress.filter((val, i) => val >= activeAdhkar[i].count).length;
-  const completionPercentage = totalItems > 0 ? Math.round((completedCount / totalItems) * 100) : 0;
-
   return (
     <Modal
       animationType="slide"
@@ -121,39 +116,13 @@ export function AdhkarModal({ visible, deed, date, onClose, onChange }: AdhkarMo
           }
         />
 
-        {/* Progress Summary */}
-        <View style={{ marginHorizontal: 16, marginTop: 10, marginBottom: 14 }}>
-          <View style={{ flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-            <Text style={{ color: theme.colors.muted, fontFamily: theme.font, fontSize: 13, lineHeight: 22 }}>
-              الأذكار المنجزة
-            </Text>
-            <Text style={{ color: theme.colors.text, fontFamily: theme.fontBold, fontSize: 15, lineHeight: 22 }}>
-              {`\u200E${toArabicNumeral(completedCount)} / ${toArabicNumeral(totalItems)} (${toArabicNumeral(completionPercentage)}%)`}
-            </Text>
-          </View>
-          {/* ProgressBar primitive */}
-          <ProgressBar value={completedCount} total={totalItems} />
-        </View>
-
-        {/* Cards ScrollView */}
-        <ScrollView
-          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 100 }}
-          showsVerticalScrollIndicator={false}
-        >
-          {activeAdhkar.map((item, index) => {
-            const currentCount = progress[index] ?? 0;
-            return (
-              <DhikrCard
-                key={`${deed.definitionId}-${index}`}
-                item={item}
-                index={index}
-                currentCount={currentCount}
-                onIncrement={updateProgress}
-                onResetItem={(idx) => updateProgress(idx, 0)}
-              />
-            );
-          })}
-        </ScrollView>
+        <AdhkarList
+          items={activeAdhkar}
+          counts={progress}
+          onIncrement={updateProgress}
+          onResetItem={(idx) => updateProgress(idx, 0)}
+          bottomInset={100}
+        />
 
         {/* Bottom Confirm/Complete Button */}
         <View

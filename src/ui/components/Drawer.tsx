@@ -59,6 +59,15 @@ export function Drawer({ visible, onClose }: DrawerProps) {
               style={styles.menuItem}
               onPress={() => {
                 onClose();
+                setTimeout(() => router.push('/azkar'), 100);
+              }}
+            >
+              <Text style={styles.menuItemText}>{ar.drawer.azkar}</Text>
+            </Pressable>
+            <Pressable
+              style={styles.menuItem}
+              onPress={() => {
+                onClose();
                 setTimeout(() => router.push('/settings'), 100);
               }}
             >
