@@ -69,6 +69,26 @@ export const DEFAULT_DEED_DEFINITIONS = [
  * Seeds the database with default definitions, scorecard sections, deeds, and dhikrs
  * if they are not already populated.
  */
+/**
+ * صلاة الجماعة tracked per prayer: one deed per prayer section, all sharing a bundle.
+ * Returned rows are deterministic so the incremental migration stays idempotent.
+ */
+function buildJamaahBundleDeeds(todayStr: string) {
+  const prayerSections = ['sec_morning', 'sec_dhuhr', 'sec_asr', 'sec_maghrib', 'sec_isha_night'];
+  return prayerSections.map((sectionId, i) => ({
+    id: `deed_jamaah_${sectionId}`,
+    definitionId: null,
+    sectionId,
+    bundleId: 'bundle_jamaah',
+    name: 'صلاة الجماعة',
+    type: 'boolean',
+    schedule: 'daily',
+    createdAt: todayStr,
+    sortOrder: 20,
+    updatedAt: Date.now(),
+  }));
+}
+
 export async function seedDatabase() {
   const existingDefs = await db.select({ count: sql`count(*)` }).from(deedDefinitions);
   const count = (existingDefs[0] as any)?.count ?? 0;
@@ -276,6 +296,19 @@ export async function seedDatabase() {
       }
     }
 
+    // 8. Add صلاة الجماعة as a per-prayer bundle (idempotent: guard on the bundle)
+    const existingJamaah = await db
+      .select()
+      .from(deeds)
+      .where(eq(deeds.bundleId, 'bundle_jamaah'))
+      .limit(1);
+    if (existingJamaah.length === 0) {
+      const todayStr = new Date().toISOString().split('T')[0];
+      for (const deed of buildJamaahBundleDeeds(todayStr)) {
+        await db.insert(deeds).values(deed);
+      }
+    }
+
     console.log('[Seed] Incremental migrations completed successfully.');
     return;
   }
@@ -351,6 +384,11 @@ export async function seedDatabase() {
   ];
 
   for (const deed of defaultDeeds) {
+    await db.insert(deeds).values(deed);
+  }
+
+  // صلاة الجماعة as a per-prayer bundle (one deed per prayer section)
+  for (const deed of buildJamaahBundleDeeds(todayStr)) {
     await db.insert(deeds).values(deed);
   }
 

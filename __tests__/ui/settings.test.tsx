@@ -2,9 +2,11 @@ import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import { Alert } from 'react-native';
 import SettingsScreen from '@/app/settings';
 import {
-  addDeed,
+  addDeedBundle,
   updateDeed,
+  updateDeedBundle,
   deleteDeed,
+  deleteDeedBundle,
   addDhikrCounter,
   updateDhikrCounter,
   deleteDhikrCounter,
@@ -16,9 +18,11 @@ import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
 
 // Mock state store
 jest.mock('@/state/deedStore', () => ({
-  addDeed: jest.fn(),
+  addDeedBundle: jest.fn(),
   updateDeed: jest.fn(),
+  updateDeedBundle: jest.fn(),
   deleteDeed: jest.fn(),
+  deleteDeedBundle: jest.fn(),
   addDhikrCounter: jest.fn(),
   updateDhikrCounter: jest.fn(),
   deleteDhikrCounter: jest.fn(),
@@ -166,12 +170,11 @@ describe('SettingsScreen', () => {
     fireEvent.press(getByTestId('btn-save-deed'));
 
     await waitFor(() => {
-      expect(addDeed).toHaveBeenCalledWith(
+      expect(addDeedBundle).toHaveBeenCalledWith(
         'ورد التسبيح',
-        'sec_morning',
+        ['sec_morning'],
         'boolean',
         'daily',
-        null,
         null,
         null
       );
@@ -201,13 +204,12 @@ describe('SettingsScreen', () => {
     fireEvent.press(getByTestId('btn-save-deed'));
 
     await waitFor(() => {
-      expect(addDeed).toHaveBeenCalledWith(
+      expect(addDeedBundle).toHaveBeenCalledWith(
         'قراءة صفحات قرآن',
-        'sec_morning',
+        ['sec_morning'],
         'measured',
         'daily',
         15,
-        null,
         null
       );
     });
@@ -250,15 +252,78 @@ describe('SettingsScreen', () => {
 
     await waitFor(() => {
       // should be active on: 1, 2, 3, 4, 5
-      expect(addDeed).toHaveBeenCalledWith(
+      expect(addDeedBundle).toHaveBeenCalledWith(
         'صيام التطوع',
-        'sec_morning',
+        ['sec_morning'],
         'boolean',
         '1,2,3,4,5',
-        null,
         null,
         null
       );
     });
+  });
+
+  it('expands a deed across multiple selected sections into a bundle', async () => {
+    mockLocalSearchParams = { openCustomDeedModal: 'true' };
+    const { getByTestId } = render(<SettingsScreen />);
+
+    fireEvent.changeText(getByTestId('input-deed-name'), 'صلاة الجماعة');
+
+    // sec_morning is selected by default; also select sec_evening
+    fireEvent.press(getByTestId('multichip-sec_evening'));
+
+    fireEvent.press(getByTestId('btn-save-deed'));
+
+    await waitFor(() => {
+      expect(addDeedBundle).toHaveBeenCalledWith(
+        'صلاة الجماعة',
+        ['sec_morning', 'sec_evening'],
+        'boolean',
+        'daily',
+        null,
+        null
+      );
+    });
+  });
+
+  it('prompts this-only vs all when deleting a bundled deed', async () => {
+    (useScorecardStructure as jest.Mock).mockReturnValue([
+      {
+        section: { id: 'sec_morning', name: 'الصبح', sortOrder: 1, updatedAt: Date.now() },
+        deeds: [
+          {
+            id: 'deed_jamaah_sec_morning',
+            definitionId: null,
+            sectionId: 'sec_morning',
+            bundleId: 'bundle_jamaah',
+            name: 'صلاة الجماعة',
+            type: 'boolean',
+            schedule: 'daily',
+            createdAt: '2026-06-12',
+            sortOrder: 20,
+            linkedDhikrId: null,
+            target: null,
+            updatedAt: Date.now(),
+            deleted: false,
+          },
+        ],
+      },
+    ]);
+
+    const spyAlert = jest.spyOn(Alert, 'alert');
+    const { getByTestId } = render(<SettingsScreen />);
+
+    fireEvent.press(getByTestId('btn-delete-deed-deed_jamaah_sec_morning'));
+
+    const options = spyAlert.mock.calls[0][2];
+    // this-only deletes the single row; all deletes the bundle
+    const thisOnly = options?.find((o) => o.text === 'هذا القسم فقط');
+    const all = options?.find((o) => o.text === 'كل الأقسام');
+    expect(thisOnly).toBeDefined();
+    expect(all).toBeDefined();
+
+    await all!.onPress!();
+    expect(deleteDeedBundle).toHaveBeenCalledWith('bundle_jamaah');
+    expect(deleteDeed).not.toHaveBeenCalled();
   });
 });

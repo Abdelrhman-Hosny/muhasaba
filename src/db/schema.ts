@@ -52,6 +52,7 @@ export const deeds = sqliteTable('deeds', {
   userId: text('user_id'),
   definitionId: text('definition_id').references(() => deedDefinitions.id),
   sectionId: text('section_id').notNull().references(() => sections.id, { onDelete: 'cascade' }),
+  bundleId: text('bundle_id'), // Groups deed rows created together as "the same item across several sections"
   name: text('name').notNull(),
   type: text('type').notNull(), // 'boolean' | 'measured'
   schedule: text('schedule').notNull(), // 'daily' | 'weekdays' | 'weekly_anytime'

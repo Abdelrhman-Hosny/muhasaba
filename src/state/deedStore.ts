@@ -481,6 +481,57 @@ export async function addDeed(
 }
 
 /**
+ * Creates the same deed across several sections at once (e.g. صلاة الجماعة in each
+ * prayer section). When more than one section is given, all created rows share a
+ * generated bundleId so they can later be edited/deleted as a group. A single
+ * section yields an ordinary standalone deed (bundleId = null), matching addDeed.
+ */
+export async function addDeedBundle(
+  name: string,
+  sectionIds: string[],
+  type: 'boolean' | 'measured',
+  schedule: string,
+  target: number | null = null,
+  linkedDhikrId: string | null = null
+): Promise<void> {
+  if (sectionIds.length === 0) return;
+
+  const now = Date.now();
+  const userId = user$.get()?.id ?? null;
+  const today = todayKey();
+  const bundleId = sectionIds.length > 1 ? `bundle_${Crypto.randomUUID()}` : null;
+
+  for (const sectionId of sectionIds) {
+    // Get next sort order for this section
+    const existing = await db
+      .select({ count: sql`count(*)` })
+      .from(deeds)
+      .where(and(eq(deeds.sectionId, sectionId), eq(deeds.deleted, false)));
+    const nextSort = (existing[0] as any)?.count ?? 0;
+
+    await db.insert(deeds).values({
+      id: Crypto.randomUUID(),
+      userId,
+      definitionId: null,
+      sectionId,
+      bundleId,
+      name,
+      type,
+      schedule,
+      createdAt: today,
+      sortOrder: nextSort,
+      linkedDhikrId,
+      target,
+      updatedAt: now,
+      deleted: false,
+      dirty: true,
+    });
+  }
+
+  scheduleSync();
+}
+
+/**
  * Updates an existing deed locally, marked as dirty.
  */
 export async function updateDeed(
@@ -510,6 +561,34 @@ export async function updateDeed(
 }
 
 /**
+ * Applies shared fields to every active member of a bundle. The section is never
+ * propagated — each member keeps its own section (e.g. its prayer).
+ */
+export async function updateDeedBundle(
+  bundleId: string,
+  fields: {
+    name?: string;
+    type?: 'boolean' | 'measured';
+    schedule?: string;
+    target?: number | null;
+    linkedDhikrId?: string | null;
+  }
+): Promise<void> {
+  const now = Date.now();
+
+  await db
+    .update(deeds)
+    .set({
+      ...fields,
+      updatedAt: now,
+      dirty: true,
+    })
+    .where(and(eq(deeds.bundleId, bundleId), eq(deeds.deleted, false)));
+
+  scheduleSync();
+}
+
+/**
  * Soft-deletes a deed locally, marked as dirty.
  */
 export async function deleteDeed(id: string): Promise<void> {
@@ -525,6 +604,26 @@ export async function deleteDeed(id: string): Promise<void> {
       dirty: true,
     })
     .where(eq(deeds.id, id));
+
+  scheduleSync();
+}
+
+/**
+ * Soft-deletes every active member of a bundle.
+ */
+export async function deleteDeedBundle(bundleId: string): Promise<void> {
+  const now = Date.now();
+  const today = todayKey();
+
+  await db
+    .update(deeds)
+    .set({
+      deleted: true,
+      deletedAt: today,
+      updatedAt: now,
+      dirty: true,
+    })
+    .where(and(eq(deeds.bundleId, bundleId), eq(deeds.deleted, false)));
 
   scheduleSync();
 }

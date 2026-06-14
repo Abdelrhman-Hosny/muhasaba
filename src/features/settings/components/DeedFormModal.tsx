@@ -5,6 +5,7 @@ import { ar } from '@/i18n/ar';
 import { DeedRow, SectionRow, DhikrRow } from '@/db/schema';
 import { ThemedTextInput } from '@/shared/components/ThemedTextInput';
 import { ChipSelector } from '@/shared/components/ChipSelector';
+import { MultiChipSelector } from '@/shared/components/MultiChipSelector';
 import { DayBubblePicker } from '@/shared/components/DayBubblePicker';
 import { ModalActions } from '@/shared/components/ModalActions';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -15,7 +16,7 @@ interface DeedFormModalProps {
   onSave: (data: {
     id: string | null;
     name: string;
-    sectionId: string;
+    sectionIds: string[];
     type: 'boolean' | 'measured';
     target: number | null;
     linkedDhikrId: string | null;
@@ -40,7 +41,7 @@ export function DeedFormModal({
 
   // Form State
   const [deedName, setDeedName] = useState('');
-  const [deedSectionId, setDeedSectionId] = useState('');
+  const [deedSectionIds, setDeedSectionIds] = useState<string[]>([]);
   const [deedType, setDeedType] = useState<'boolean' | 'measured'>('boolean');
   const [deedTarget, setDeedTarget] = useState('');
   const [showTargetInput, setShowTargetInput] = useState(false);
@@ -52,7 +53,7 @@ export function DeedFormModal({
     if (visible) {
       if (deed) {
         setDeedName(deed.name);
-        setDeedSectionId(deed.sectionId);
+        setDeedSectionIds([deed.sectionId]);
         setDeedType(deed.type as 'boolean' | 'measured');
         setDeedTarget(deed.target ? String(deed.target) : '');
         setShowTargetInput(deed.type === 'measured');
@@ -70,7 +71,7 @@ export function DeedFormModal({
       } else {
         // Defaults for new custom deed
         setDeedName('');
-        setDeedSectionId(sectionsList[0]?.id || 'sec_morning');
+        setDeedSectionIds(sectionsList[0]?.id ? [sectionsList[0].id] : []);
         setDeedType('boolean');
         setDeedTarget('');
         setShowTargetInput(false);
@@ -92,9 +93,20 @@ export function DeedFormModal({
     }
   };
 
+  const handleToggleSection = (id: string) => {
+    setDeedSectionIds((prev) =>
+      prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
+    );
+  };
+
   const handleSave = () => {
     if (!deedName.trim()) {
       Alert.alert('خطأ', 'الرجاء إدخال اسم العبادة');
+      return;
+    }
+
+    if (deedSectionIds.length === 0) {
+      Alert.alert('خطأ', ar.settings.deeds.sectionRequired);
       return;
     }
 
@@ -111,7 +123,7 @@ export function DeedFormModal({
     onSave({
       id: deed ? deed.id : null,
       name: deedName.trim(),
-      sectionId: deedSectionId,
+      sectionIds: deedSectionIds,
       type: deedType,
       target: targetVal,
       linkedDhikrId: showTargetInput ? deedLinkedDhikrId : null,
@@ -159,14 +171,24 @@ export function DeedFormModal({
               />
             </View>
 
-            {/* Section Selector */}
+            {/* Section Selector — multi-select on create, single on edit */}
             <View style={styles.formGroup}>
-              <Text style={styles.formLabel}>{ar.settings.deeds.section}</Text>
-              <ChipSelector
-                items={sectionSelectorItems}
-                selectedId={deedSectionId}
-                onSelect={(id) => id && setDeedSectionId(id)}
-              />
+              <Text style={styles.formLabel}>
+                {deed ? ar.settings.deeds.section : ar.settings.deeds.sections}
+              </Text>
+              {deed ? (
+                <ChipSelector
+                  items={sectionSelectorItems}
+                  selectedId={deedSectionIds[0] ?? null}
+                  onSelect={(id) => id && setDeedSectionIds([id])}
+                />
+              ) : (
+                <MultiChipSelector
+                  items={sectionSelectorItems}
+                  selectedIds={deedSectionIds}
+                  onToggle={handleToggleSection}
+                />
+              )}
             </View>
 
             {/* Target Toggle Switch */}

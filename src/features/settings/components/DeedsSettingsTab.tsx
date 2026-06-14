@@ -12,7 +12,7 @@ interface DeedsSettingsTabProps {
   scorecardStructure: ScorecardStructureSection[];
   dhikrNamesMap: Map<string, string>;
   onEditDeed: (deed: DeedRow) => void;
-  onDeleteDeed: (id: string, name: string) => void;
+  onDeleteDeed: (deed: DeedRow) => void;
 }
 
 export function DeedsSettingsTab({
@@ -80,7 +80,7 @@ export function DeedsSettingsTab({
                     </Pressable>
                     <Pressable
                       testID={`btn-delete-deed-${deed.id}`}
-                      onPress={() => onDeleteDeed(deed.id, deed.name)}
+                      onPress={() => onDeleteDeed(deed)}
                       hitSlop={8}
                       style={styles.actionBtn}
                     >

@@ -1,0 +1,1 @@
+ALTER TABLE `deeds` ADD `bundle_id` text;

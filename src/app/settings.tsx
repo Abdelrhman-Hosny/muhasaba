@@ -12,10 +12,12 @@ import { ScreenHeader } from '@/shared/components/ScreenHeader';
 import { Ionicons } from '@expo/vector-icons';
 import {
   deleteDeed,
+  deleteDeedBundle,
   deleteDhikrCounter,
   useScorecardStructure,
   updateDeed,
-  addDeed,
+  updateDeedBundle,
+  addDeedBundle,
   updateDhikrCounter,
   addDhikrCounter,
   useSections,
@@ -90,7 +92,7 @@ export default function SettingsScreen() {
   const handleSaveDeed = async (data: {
     id: string | null;
     name: string;
-    sectionId: string;
+    sectionIds: string[];
     type: 'boolean' | 'measured';
     target: number | null;
     linkedDhikrId: string | null;
@@ -98,25 +100,51 @@ export default function SettingsScreen() {
   }) => {
     try {
       if (data.id) {
-        await updateDeed(data.id, {
+        const sharedFields = {
           name: data.name,
-          sectionId: data.sectionId,
           type: data.type,
           schedule: data.schedule,
           target: data.target,
           linkedDhikrId: data.linkedDhikrId,
-          definitionId: deedToEdit?.definitionId || null,
-        });
-        handleCloseDeedModal();
+        };
+        const applyThisOnly = async () => {
+          await updateDeed(data.id!, {
+            ...sharedFields,
+            sectionId: data.sectionIds[0],
+            definitionId: deedToEdit?.definitionId || null,
+          });
+          handleCloseDeedModal();
+        };
+
+        // Bundled deed: ask whether the edit applies to this section only or the whole group
+        if (deedToEdit?.bundleId) {
+          Alert.alert(
+            ar.settings.deeds.bundleScopeTitle,
+            ar.settings.deeds.bundleEditPrompt,
+            [
+              { text: ar.settings.cancel, style: 'cancel' },
+              { text: ar.settings.deeds.bundleThisOnly, onPress: applyThisOnly },
+              {
+                text: ar.settings.deeds.bundleAll,
+                onPress: async () => {
+                  await updateDeedBundle(deedToEdit.bundleId!, sharedFields);
+                  handleCloseDeedModal();
+                },
+              },
+            ],
+            { cancelable: true }
+          );
+        } else {
+          await applyThisOnly();
+        }
       } else {
-        await addDeed(
+        await addDeedBundle(
           data.name,
-          data.sectionId,
+          data.sectionIds,
           data.type,
           data.schedule,
           data.target,
-          data.linkedDhikrId,
-          null
+          data.linkedDhikrId
         );
         const scheduleLabel = getScheduleLabel(data.schedule);
         const nextActiveDate = getNextActiveDate(data.schedule);
@@ -141,17 +169,44 @@ export default function SettingsScreen() {
     }
   };
 
-  const handleDeleteDeedConfirm = (id: string, name: string) => {
+  const handleDeleteDeedConfirm = (deed: DeedRow) => {
+    // Bundled deed: offer deleting this section only or the whole group
+    if (deed.bundleId) {
+      Alert.alert(
+        ar.settings.deeds.bundleScopeTitle,
+        `${ar.settings.deeds.bundleDeletePrompt}\n(${deed.name})`,
+        [
+          { text: ar.settings.cancel, style: 'cancel' },
+          {
+            text: ar.settings.deeds.bundleThisOnly,
+            style: 'destructive',
+            onPress: async () => {
+              await deleteDeed(deed.id);
+            },
+          },
+          {
+            text: ar.settings.deeds.bundleAll,
+            style: 'destructive',
+            onPress: async () => {
+              await deleteDeedBundle(deed.bundleId!);
+            },
+          },
+        ],
+        { cancelable: true }
+      );
+      return;
+    }
+
     Alert.alert(
       ar.settings.deeds.delete,
-      `${ar.settings.deeds.deleteConfirm}\n(${name})`,
+      `${ar.settings.deeds.deleteConfirm}\n(${deed.name})`,
       [
         { text: ar.settings.cancel, style: 'cancel' },
         {
           text: ar.settings.delete,
           style: 'destructive',
           onPress: async () => {
-            await deleteDeed(id);
+            await deleteDeed(deed.id);
           },
         },
       ],

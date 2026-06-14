@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme, ThemeType, rtlRow } from '@/ui/theme';
-import { useDeedDefinitions, useScorecardStructure, addDeed, addDhikrCounter } from '@/state/deedStore';
+import { useDeedDefinitions, useScorecardStructure, addDeed, deleteDeed, addDhikrCounter } from '@/state/deedStore';
 import { useActiveDefinitionIds } from '@/shared/hooks/useActiveDefinitionIds';
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
 import { db } from '@/db/client';
@@ -29,6 +29,20 @@ export default function DeedsLibraryScreen() {
 
   // Set of all definition IDs currently active in the user's scorecard
   const activeDefinitionIds = useActiveDefinitionIds(scorecardStructure);
+
+  // Map definition ID -> active scorecard deed IDs (for removal)
+  const deedIdsByDefinition = useMemo(() => {
+    const m = new Map<string, string[]>();
+    for (const { deeds } of scorecardStructure) {
+      for (const deed of deeds) {
+        if (deed.definitionId) {
+          if (!m.has(deed.definitionId)) m.set(deed.definitionId, []);
+          m.get(deed.definitionId)!.push(deed.id);
+        }
+      }
+    }
+    return m;
+  }, [scorecardStructure]);
 
   // Group definitions by bundle
   const { bundles, standalone } = useMemo(() => {
@@ -127,6 +141,22 @@ export default function DeedsLibraryScreen() {
     );
   };
 
+  // Soft-deletes every active scorecard deed created from this definition.
+  const handleRemoveDeed = async (item: typeof definitions[0]) => {
+    const ids = deedIdsByDefinition.get(item.id) ?? [];
+    for (const id of ids) {
+      await deleteDeed(id);
+    }
+  };
+
+  const handleToggleDeed = (item: typeof definitions[0], isActive: boolean) => {
+    if (isActive) {
+      handleRemoveDeed(item);
+    } else {
+      handleAddDeed(item);
+    }
+  };
+
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* Header */}
@@ -173,11 +203,15 @@ export default function DeedsLibraryScreen() {
                 </View>
                 
                 {/* Master Switch UI Simulation */}
-                <Pressable 
+                <Pressable
+                  testID={`lib-checkbox-bundle-${bundleId}`}
                   style={[styles.checkbox, isAllActive && styles.checkboxActive, isPartial && styles.checkboxPartial]}
                   onPress={() => {
-                    // If partial or empty, add all missing.
-                    if (!isAllActive) {
+                    if (isAllActive) {
+                      // All active -> remove the whole bundle.
+                      items.forEach(item => handleRemoveDeed(item));
+                    } else {
+                      // Partial or empty -> add all missing.
                       items.forEach(item => {
                         if (!activeDefinitionIds.has(item.id)) {
                           handleAddDeed(item);
@@ -198,11 +232,10 @@ export default function DeedsLibraryScreen() {
                     return (
                       <View key={item.id} style={styles.deedItem}>
                         <Text style={styles.deedName}>{item.name}</Text>
-                        <Pressable 
+                        <Pressable
+                          testID={`lib-checkbox-${item.id}`}
                           style={[styles.checkbox, isActive && styles.checkboxActive]}
-                          onPress={() => {
-                            if (!isActive) handleAddDeed(item);
-                          }}
+                          onPress={() => handleToggleDeed(item, isActive)}
                         >
                           {isActive && <Ionicons name="checkmark" size={16} color={theme.colors.onPrimary} />}
                         </Pressable>
@@ -226,11 +259,10 @@ export default function DeedsLibraryScreen() {
                 return (
                   <View key={item.id} style={[styles.deedItem, isLast && { borderBottomWidth: 0 }]}>
                     <Text style={styles.deedName}>{item.name}</Text>
-                    <Pressable 
+                    <Pressable
+                      testID={`lib-checkbox-${item.id}`}
                       style={[styles.checkbox, isActive && styles.checkboxActive]}
-                      onPress={() => {
-                        if (!isActive) handleAddDeed(item);
-                      }}
+                      onPress={() => handleToggleDeed(item, isActive)}
                     >
                       {isActive && <Ionicons name="checkmark" size={16} color={theme.colors.onPrimary} />}
                     </Pressable>
