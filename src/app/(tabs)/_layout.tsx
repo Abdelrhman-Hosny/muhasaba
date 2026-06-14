@@ -18,7 +18,6 @@ export default function TabsLayout() {
         tabBarLabelStyle: {
           fontFamily: theme.font,
           fontSize: 11,
-          writingDirection: 'rtl',
         },
       }}
     >

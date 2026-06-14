@@ -375,7 +375,6 @@ function createStyles(theme: ThemeType, insets: EdgeInsets) {
       fontFamily: theme.fontBold,
       fontSize: 20,
       lineHeight: 30,
-      writingDirection: 'rtl',
     },
     dateStripScroll: {
       flexGrow: 0,
@@ -397,7 +396,6 @@ function createStyles(theme: ThemeType, insets: EdgeInsets) {
     dateBtnTop: {
       fontSize: 14,
       lineHeight: 18,
-      writingDirection: 'rtl',
     },
     dateBtnSub: {
       fontFamily: theme.font,

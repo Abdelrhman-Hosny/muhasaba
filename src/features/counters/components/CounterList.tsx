@@ -151,7 +151,6 @@ function createStyles(theme: ThemeType) {
       fontFamily: theme.font,
       fontSize: 18,
       fontWeight: 'bold',
-      writingDirection: 'rtl',
     },
     subtextContainer: {
       flexDirection: rtlRow,
