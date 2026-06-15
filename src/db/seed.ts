@@ -4,6 +4,31 @@ import { sql, eq, inArray, and, isNull } from 'drizzle-orm';
 import * as Crypto from 'expo-crypto';
 import { buildDefaultUserData } from './defaultData';
 
+/** The five daily prayers, with their time-of-day section and Arabic label. */
+const PRAYER_SLOTS = [
+  { key: 'fajr', section: 'sec_morning', label: 'الفجر' },
+  { key: 'dhuhr', section: 'sec_dhuhr', label: 'الظهر' },
+  { key: 'asr', section: 'sec_asr', label: 'العصر' },
+  { key: 'maghrib', section: 'sec_maghrib', label: 'المغرب' },
+  { key: 'isha', section: 'sec_isha_night', label: 'العشاء' },
+];
+
+/**
+ * Builds 5 per-prayer deed definitions for an act repeated each prayer (e.g.
+ * ترديد الأذان). They share a bundleId so the library renders them as one
+ * collapsible group with a per-prayer checkbox each.
+ */
+const perPrayerDefs = (idPrefix: string, bundleId: string, baseName: string) =>
+  PRAYER_SLOTS.map((p) => ({
+    id: `${idPrefix}_${p.key}`,
+    name: `${baseName} (${p.label})`,
+    type: 'boolean',
+    defaultSchedule: 'daily',
+    defaultSectionId: p.section,
+    bundleId,
+    linkedDhikrTemplate: null as string | null,
+  }));
+
 export const DEFAULT_DEED_DEFINITIONS = [
   // 1. الصلوات المكتوبة (grouped in bundle_prayers)
   { id: 'fajr', name: 'الفجر', type: 'boolean', defaultSchedule: 'daily', defaultSectionId: 'sec_morning', bundleId: 'bundle_prayers', linkedDhikrTemplate: null },
@@ -26,12 +51,11 @@ export const DEFAULT_DEED_DEFINITIONS = [
   { id: 'sunnah_maghrib', name: 'سنة المغرب (ركعتان)', type: 'boolean', defaultSchedule: 'daily', defaultSectionId: 'sec_maghrib', bundleId: 'bundle_rawateb', linkedDhikrTemplate: null },
   { id: 'sunnah_isha', name: 'سنة العشاء (ركعتان)', type: 'boolean', defaultSchedule: 'daily', defaultSectionId: 'sec_isha_night', bundleId: 'bundle_rawateb', linkedDhikrTemplate: null },
 
-  // 3. أذكار الصلاة (bundle_adhkar_salah)
-  { id: 'adhkar_salah_adhan', name: 'ترديد الأذان والذكر بعده', type: 'boolean', defaultSchedule: 'daily', defaultSectionId: 'sec_quran', bundleId: 'bundle_adhkar_salah', linkedDhikrTemplate: null },
-  { id: 'adhkar_salah_between', name: 'الدعاء بين الأذانين', type: 'boolean', defaultSchedule: 'daily', defaultSectionId: 'sec_quran', bundleId: 'bundle_adhkar_salah', linkedDhikrTemplate: null },
-  { id: 'adhkar_salah_after', name: 'الأذكار عقب الصلوات المفروضة', type: 'boolean', defaultSchedule: 'daily', defaultSectionId: 'sec_quran', bundleId: 'bundle_adhkar_salah', linkedDhikrTemplate: null },
-  { id: 'adhkar_salah_takbeer', name: 'إدراك تكبيرة الإحرام مع الجماعة', type: 'boolean', defaultSchedule: 'daily', defaultSectionId: 'sec_quran', bundleId: 'bundle_adhkar_salah', linkedDhikrTemplate: null },
-  { id: 'adhkar_salah_salawat', name: 'الصلاة على النبي بعد الفراغ من الصلاة', type: 'boolean', defaultSchedule: 'daily', defaultSectionId: 'sec_quran', bundleId: 'bundle_adhkar_salah', linkedDhikrTemplate: null },
+  // 3. أذكار الصلاة — per-prayer bundles (each act tracked for each of the 5 prayers)
+  ...perPrayerDefs('adhan', 'bundle_adhan', 'ترديد الأذان'),
+  ...perPrayerDefs('dua_adhanain', 'bundle_dua_adhanain', 'الدعاء بين الأذانين'),
+  ...perPrayerDefs('takbeer', 'bundle_takbeer', 'تكبيرة الإحرام'),
+  ...perPrayerDefs('adhkar_baad', 'bundle_adhkar_baad', 'الأذكار عقب الصلاة'),
 
   // 4. وظائف يوم الجمعة (bundle_friday)
   { id: 'friday_ghusl', name: 'الغسل لصلاة الجمعة', type: 'boolean', defaultSchedule: '5', defaultSectionId: 'sec_morning', bundleId: 'bundle_friday', linkedDhikrTemplate: null },
@@ -300,6 +324,55 @@ export async function seedDatabase() {
     await db
       .delete(deeds)
       .where(and(eq(deeds.bundleId, 'bundle_jamaah'), isNull(deeds.definitionId)));
+
+    // 9. أذكار الصلاة: split each single item into a per-prayer bundle; drop الصلاة على النبي.
+    const adhkarSalahSplit = [
+      { oldId: 'adhkar_salah_adhan', bundleId: 'bundle_adhan' },
+      { oldId: 'adhkar_salah_between', bundleId: 'bundle_dua_adhanain' },
+      { oldId: 'adhkar_salah_takbeer', bundleId: 'bundle_takbeer' },
+      { oldId: 'adhkar_salah_after', bundleId: 'bundle_adhkar_baad' },
+    ];
+
+    for (const split of adhkarSalahSplit) {
+      const newDefs = DEFAULT_DEED_DEFINITIONS.filter((d) => d.bundleId === split.bundleId);
+
+      // Ensure the 5 per-prayer definitions exist.
+      for (const def of newDefs) {
+        const existingDef = await db.select().from(deedDefinitions).where(eq(deedDefinitions.id, def.id)).limit(1);
+        if (existingDef.length === 0) {
+          await db.insert(deedDefinitions).values(def);
+        }
+      }
+
+      // If the user had opted into the old single deed, recreate it as 5 per-prayer deeds
+      // (matching how the library would create them: bundleId null, keyed by definitionId).
+      const oldDeeds = await db.select().from(deeds).where(eq(deeds.definitionId, split.oldId));
+      if (oldDeeds.length > 0) {
+        for (const def of newDefs) {
+          const existing = await db.select().from(deeds).where(eq(deeds.definitionId, def.id)).limit(1);
+          if (existing.length === 0) {
+            await db.insert(deeds).values({
+              id: `deed_${def.id}`,
+              definitionId: def.id,
+              sectionId: def.defaultSectionId,
+              name: def.name,
+              type: def.type,
+              schedule: def.defaultSchedule,
+              createdAt: todayStr,
+              sortOrder: 15,
+              updatedAt: Date.now(),
+            });
+          }
+        }
+        await db.delete(deeds).where(eq(deeds.definitionId, split.oldId));
+      }
+
+      await db.delete(deedDefinitions).where(eq(deedDefinitions.id, split.oldId));
+    }
+
+    // Remove الصلاة على النبي بعد الفراغ entirely (covered by أذكار عقب الصلاة).
+    await db.delete(deeds).where(eq(deeds.definitionId, 'adhkar_salah_salawat'));
+    await db.delete(deedDefinitions).where(eq(deedDefinitions.id, 'adhkar_salah_salawat'));
 
     console.log('[Seed] Incremental migrations completed successfully.');
     return;

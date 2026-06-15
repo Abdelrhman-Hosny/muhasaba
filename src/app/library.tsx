@@ -16,7 +16,10 @@ const BUNDLE_ORDER = [
   'bundle_prayers',
   'bundle_jamaah',
   'bundle_rawateb',
-  'bundle_adhkar_salah',
+  'bundle_adhan',
+  'bundle_dua_adhanain',
+  'bundle_takbeer',
+  'bundle_adhkar_baad',
   'bundle_friday',
   'bundle_adhkar_muqayyada',
   'bundle_adhkar_mutlaqa',
@@ -111,7 +114,10 @@ export default function DeedsLibraryScreen() {
     if (bundleId === 'rawateb' || bundleId === 'bundle_rawateb') return 'سنن الرواتب';
     if (bundleId === 'prayers' || bundleId === 'bundle_prayers') return 'الصلوات الخمس';
     if (bundleId === 'bundle_jamaah') return 'صلاة الجماعة';
-    if (bundleId === 'bundle_adhkar_salah') return 'أذكار الصلاة';
+    if (bundleId === 'bundle_adhan') return 'ترديد الأذان والذكر بعده';
+    if (bundleId === 'bundle_dua_adhanain') return 'الدعاء بين الأذانين';
+    if (bundleId === 'bundle_takbeer') return 'إدراك تكبيرة الإحرام';
+    if (bundleId === 'bundle_adhkar_baad') return 'الأذكار عقب الصلوات المفروضة';
     if (bundleId === 'bundle_friday') return 'وظائف يوم الجمعة';
     if (bundleId === 'bundle_adhkar_muqayyada') return 'الأذكار المقيدة اليومية';
     if (bundleId === 'bundle_adhkar_mutlaqa') return 'الأذكار المطلقة';
@@ -420,6 +426,7 @@ function createStyles(theme: ThemeType) {
       fontSize: 15,
       color: theme.colors.text,
       fontFamily: theme.font,
+      flexShrink: 1,
     },
     checkbox: {
       width: 24,

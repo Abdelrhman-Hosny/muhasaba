@@ -117,6 +117,28 @@ the same opt-in state. Idempotent by construction.
 تكبيرة الإحرام and الصف الأول already exist once-daily under أذكار الصلاة and are left
 as-is.
 
+### أذكار الصلاة → per-prayer bundles
+
+The أذكار الصلاة presets were single once-daily items, which couldn't capture partial
+completion ("did adhkar after Asr and Maghrib only") nor reveal per-prayer/per-weekday
+patterns. Since *which prayer* matters for self-accountability, each repeated act becomes
+its own per-prayer bundle of 5 (same shape as صلاة الجماعة), homed in each prayer's time
+section so the daily scorecard groups them under their prayer:
+
+- `bundle_adhan` — ترديد الأذان والذكر بعده
+- `bundle_dua_adhanain` — الدعاء بين الأذانين
+- `bundle_takbeer` — إدراك تكبيرة الإحرام
+- `bundle_adhkar_baad` — الأذكار عقب الصلوات المفروضة
+
+الصلاة على النبي بعد الفراغ is **removed** (covered by أذكار عقب الصلاة). Definitions are
+generated via a `perPrayerDefs(idPrefix, bundleId, baseName)` helper. All are opt-in (not
+seeded onto the default scorecard).
+
+Incremental migration: add the 20 new definitions; for any user who had opted into an old
+single adhkar-salah deed, recreate it as its 5 per-prayer deeds (the muqayyada-split
+precedent); delete the old single definitions and الصلاة على النبي. Library `getBundleName`
++ `BUNDLE_ORDER` updated so the four render in prayer-flow order after صلاة الجماعة.
+
 ## Out of scope (YAGNI)
 
 - Many-to-many sections / shared logs.
