@@ -422,8 +422,23 @@ export async function seedDefaultUserData(options?: { freshIds?: boolean }): Pro
     genId: () => Crypto.randomUUID(),
   });
 
+  // Sections keep stable ids, so a factory reset re-seeds the same ids that were
+  // just tombstoned above — revive them via upsert instead of colliding on PK.
   for (const sec of secs) {
-    await db.insert(sections).values(sec);
+    await db
+      .insert(sections)
+      .values(sec)
+      .onConflictDoUpdate({
+        target: sections.id,
+        set: {
+          name: sec.name,
+          sortOrder: sec.sortOrder,
+          deletedAt: null,
+          updatedAt: sec.updatedAt,
+          deleted: false,
+          dirty: true,
+        },
+      });
   }
   for (const dk of dks) {
     await db.insert(dhikrs).values(dk);

@@ -8,8 +8,10 @@ import type { SectionRow, DhikrRow, DeedRow } from './schema';
  *
  * Each template uses a stable `key` that doubles as the deterministic row id
  * during the initial seed. `buildDefaultUserData({ freshIds: true })` swaps the
- * keys for freshly generated ids (used by factory reset) while remapping the
- * `sectionId` / `linkedDhikrId` references to the new ids.
+ * keys for freshly generated ids on deeds and dhikrs (used by factory reset)
+ * while remapping the `linkedDhikrId` references. Sections always keep their
+ * stable keys so the global deedDefinitions catalog (which references sections
+ * by key via defaultSectionId) never dangles.
  */
 
 const SECTION_TEMPLATES = [
@@ -80,10 +82,10 @@ export interface DefaultUserData {
 /**
  * Builds insert-ready default sections, dhikrs, and deeds.
  *
- * With `freshIds: true`, every row receives a generated id and all references
- * (`deed.sectionId`, `deed.linkedDhikrId`) are remapped to the new ids, so the
- * rows can be inserted without colliding with tombstoned default rows that
- * still hold the deterministic keys (the factory-reset case).
+ * With `freshIds: true`, deeds and dhikrs receive generated ids (and their
+ * `linkedDhikrId` references are remapped) so they can be inserted without
+ * colliding with tombstoned default rows that still hold the deterministic keys
+ * (the factory-reset case). Sections always keep their stable keys.
  */
 export function buildDefaultUserData(options: BuildDefaultUserDataOptions): DefaultUserData {
   const { now, today, freshIds = false } = options;
@@ -95,9 +97,14 @@ export function buildDefaultUserData(options: BuildDefaultUserDataOptions): Defa
     return genId();
   };
 
+  // Sections keep their stable keys as ids even under freshIds: the global
+  // deedDefinitions catalog references them by key (defaultSectionId), so
+  // randomising them would dangle every catalog reference (library "add" would
+  // insert deeds into non-existent sections, invisible on the scorecard).
+  // Only deeds/dhikrs need fresh ids to avoid colliding with tombstoned rows.
   const sectionIdByKey = new Map<string, string>();
   const sections: SectionRow[] = SECTION_TEMPLATES.map((t) => {
-    const id = idFor(t.key);
+    const id = t.key;
     sectionIdByKey.set(t.key, id);
     return {
       id,

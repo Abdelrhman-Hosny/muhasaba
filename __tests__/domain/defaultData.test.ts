@@ -27,18 +27,17 @@ describe('buildDefaultUserData', () => {
     expect(deeds.every((d) => d.createdAt === TODAY)).toBe(true);
   });
 
-  it('generates fresh unique ids and remaps references when freshIds is true', () => {
+  it('generates fresh unique ids for deeds/dhikrs and remaps references when freshIds is true', () => {
     let counter = 0;
     const genId = () => `gen_${counter++}`;
     const { sections, dhikrs, deeds } = buildDefaultUserData({ now: NOW, today: TODAY, freshIds: true, genId });
 
-    // No row keeps a deterministic key.
-    const allIds = [...sections, ...dhikrs, ...deeds].map((r) => r.id);
-    expect(allIds.every((id) => id.startsWith('gen_'))).toBe(true);
-    // All ids unique.
-    expect(new Set(allIds).size).toBe(allIds.length);
+    // Deeds and dhikrs get fresh keys to avoid colliding with tombstoned rows.
+    const freshIds = [...dhikrs, ...deeds].map((r) => r.id);
+    expect(freshIds.every((id) => id.startsWith('gen_'))).toBe(true);
+    expect(new Set(freshIds).size).toBe(freshIds.length);
 
-    // References point at the NEW ids, not the original keys.
+    // References point at the correct ids.
     const sectionIds = new Set(sections.map((s) => s.id));
     const dhikrIds = new Set(dhikrs.map((d) => d.id));
     for (const deed of deeds) {
@@ -56,6 +55,21 @@ describe('buildDefaultUserData', () => {
     const istighfarDhikr = dhikrs.find((d) => d.name === 'استغفار')!;
     const istighfarDeed = deeds.find((d) => d.name === 'الاستغفار')!;
     expect(istighfarDeed.linkedDhikrId).toBe(istighfarDhikr.id);
+  });
+
+  it('keeps stable section ids even when freshIds is true', () => {
+    // The global deedDefinitions catalog references sections by their stable
+    // keys (defaultSectionId = 'sec_morning', …). If a factory reset randomised
+    // section ids, those references would dangle and library "add" would insert
+    // deeds into non-existent sections (invisible on the scorecard). So sections
+    // must keep their deterministic ids regardless of freshIds.
+    let counter = 0;
+    const genId = () => `gen_${counter++}`;
+    const { sections } = buildDefaultUserData({ now: NOW, today: TODAY, freshIds: true, genId });
+
+    expect(sections.find((s) => s.id === 'sec_morning')).toBeDefined();
+    expect(sections.find((s) => s.id === 'sec_quran')).toBeDefined();
+    expect(sections.every((s) => !s.id.startsWith('gen_'))).toBe(true);
   });
 
   it('throws if freshIds is true without a genId', () => {
