@@ -324,6 +324,9 @@ Design: [reset-progress](superpowers/specs/2026-06-15-reset-progress-design.md).
 ### Polish Backlog
 - [ ] Circular progress ring option
 - [ ] 7-day streak row
+- [ ] **Linking mutlaq adhkar (الأذكار المطلقة) with deeds — UX rework.** Current flow for
+      linking a free dhikr counter to an actual deed is not intuitive; needs a clearer,
+      more discoverable UX. Revisit before relying on it more heavily.
 
 ### Future Phase
 - [ ] Iteration 8 — Week Screen (Weekly-anytime deeds tab)
