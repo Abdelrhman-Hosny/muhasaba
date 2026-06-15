@@ -272,6 +272,34 @@ scorecard. Design: `docs/superpowers/specs/2026-06-14-hisn-almuslim-azkar-librar
 
 ---
 
+## ✅ Iteration 12 — Reset Progress (2026-06-15)
+
+Design: [reset-progress](superpowers/specs/2026-06-15-reset-progress-design.md).
+
+### Feature
+- [x] "إعادة تعيين التقدم" in a "منطقة الخطر" footer on the الحساب screen (`src/app/account.tsx`), available signed-in or out.
+- [x] Two-step flow: scope chooser (3 options) → per-scope confirmation Alert → success/error Alert.
+- [x] Three offline-first reset variants in `src/state/resetStore.ts`, each in a SQLite transaction:
+  - `resetLogsOnly()` — deletes all deed/dhikr logs, keeps deeds/sections/counters.
+  - `resetLogsAndDeeds()` — also removes all deeds, sections, and dhikr counters.
+  - `factoryReset()` — wipes everything, then re-seeds defaults with fresh ids.
+- [x] Clears the in-modal adhkar progress (`muhassaba-adhkar-progress` MMKV) on every reset.
+
+### Sync correctness
+- [x] Tombstones rows (`deleted + dirty`, never hard-delete) and calls `scheduleSync()`, so deletions propagate to Supabase (last-write-wins by `updatedAt`) and aren't resurrected on next pull.
+- [x] Factory reset re-seeds with freshly-generated ids to avoid PK collisions with the tombstoned default rows.
+
+### Refactor
+- [x] Extracted default scorecard data + a pure `buildDefaultUserData({ freshIds })` builder into `src/db/defaultData.ts` (no native imports).
+- [x] `src/db/seed.ts` now exposes `seedDefaultUserData({ freshIds? })`; initial seed uses deterministic ids (unchanged behavior).
+
+### Housekeeping & Tests
+- [x] Added `__tests__/domain/defaultData.test.ts` (deterministic ids, seed flags, fresh-id remapping, `genId` guard).
+- [x] Added i18n `reset` strings in `src/i18n/ar.ts`.
+- [x] Full Jest suite green (58 tests); no new `tsc` errors.
+
+---
+
 ## 🔲 Remaining Work (by priority)
 
 ### Iteration 3 — Day Screen Polish

@@ -1,12 +1,40 @@
-import { View, Text, Pressable, StyleSheet, I18nManager } from 'react-native';
+import { View, Text, Pressable, StyleSheet, I18nManager, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useUser, signInWithGoogle, signOut } from '@/state/auth';
 import { useSyncStatus } from '@/state/syncStatus';
+import { resetLogsOnly, resetLogsAndDeeds, factoryReset } from '@/state/resetStore';
 import { useTheme, ThemeType } from '@/ui/theme';
 import { ar } from '@/i18n/ar';
 import { useMemo } from 'react';
+
+function confirmReset(body: string, run: () => Promise<void>) {
+  Alert.alert(ar.reset.title, body, [
+    { text: ar.reset.cancel, style: 'cancel' },
+    {
+      text: ar.reset.confirmCta,
+      style: 'destructive',
+      onPress: async () => {
+        try {
+          await run();
+          Alert.alert(ar.reset.doneTitle, ar.reset.doneBody);
+        } catch {
+          Alert.alert(ar.reset.errorTitle, ar.reset.errorBody);
+        }
+      },
+    },
+  ]);
+}
+
+function onResetPress() {
+  Alert.alert(ar.reset.title, ar.reset.chooseBody, [
+    { text: ar.reset.logsOnly, onPress: () => confirmReset(ar.reset.logsOnlyConfirm, resetLogsOnly) },
+    { text: ar.reset.logsAndDeeds, style: 'destructive', onPress: () => confirmReset(ar.reset.logsAndDeedsConfirm, resetLogsAndDeeds) },
+    { text: ar.reset.factory, style: 'destructive', onPress: () => confirmReset(ar.reset.factoryConfirm, factoryReset) },
+    { text: ar.reset.cancel, style: 'cancel' },
+  ]);
+}
 
 export default function AccountScreen() {
   const router = useRouter();
@@ -50,6 +78,14 @@ export default function AccountScreen() {
             </Pressable>
           </View>
         )}
+      </View>
+
+      <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
+        <Text style={styles.dangerLabel}>{ar.reset.sectionLabel}</Text>
+        <Pressable style={styles.resetBtn} onPress={onResetPress}>
+          <Ionicons name="trash-outline" size={18} color={theme.colors.missed} style={styles.resetIcon} />
+          <Text style={styles.resetBtnText}>{ar.reset.title}</Text>
+        </Pressable>
       </View>
     </View>
   );
@@ -102,5 +138,22 @@ function createStyles(theme: ThemeType) {
       alignItems: 'center',
     },
     signOutBtnText: { color: theme.colors.missed, fontFamily: theme.font, fontSize: 16 },
+
+    // Danger zone (reset progress)
+    footer: { paddingHorizontal: 24, paddingTop: 16, borderTopWidth: 1, borderTopColor: theme.colors.surface, gap: 12 },
+    dangerLabel: { color: theme.colors.muted, fontFamily: theme.font, fontSize: 13, textAlign: 'center' },
+    resetBtn: {
+      flexDirection: I18nManager.isRTL ? 'row' : 'row-reverse',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      paddingVertical: 14,
+      paddingHorizontal: 24,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: theme.colors.missed,
+    },
+    resetIcon: {},
+    resetBtnText: { color: theme.colors.missed, fontFamily: theme.font, fontSize: 16 },
   });
 }

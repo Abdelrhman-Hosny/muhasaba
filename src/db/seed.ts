@@ -1,6 +1,8 @@
 import { db } from './client';
 import { deedDefinitions, sections, deeds, dhikrs } from './schema';
 import { sql, eq, inArray, and, isNull } from 'drizzle-orm';
+import * as Crypto from 'expo-crypto';
+import { buildDefaultUserData } from './defaultData';
 
 export const DEFAULT_DEED_DEFINITIONS = [
   // 1. الصلوات المكتوبة (grouped in bundle_prayers)
@@ -320,65 +322,39 @@ export async function seedDatabase() {
     await db.insert(deedDefinitions).values(def);
   }
 
-  // 3. Insert Time of Day Sections (local-only initially, user_id is null)
-  const defaultSections = [
-    { id: 'sec_morning', name: 'الصبح', sortOrder: 1, updatedAt: Date.now() },
-    { id: 'sec_dhuhr', name: 'الظهر', sortOrder: 2, updatedAt: Date.now() },
-    { id: 'sec_asr', name: 'العصر', sortOrder: 3, updatedAt: Date.now() },
-    { id: 'sec_maghrib', name: 'المغرب', sortOrder: 4, updatedAt: Date.now() },
-    { id: 'sec_isha_night', name: 'العشاء والليل', sortOrder: 5, updatedAt: Date.now() },
-    { id: 'sec_quran', name: 'أعمال على مدار اليوم', sortOrder: 6, updatedAt: Date.now() },
-  ];
-
-  for (const sec of defaultSections) {
-    await db.insert(sections).values(sec);
-  }
-
-  // 4. Insert Default Dhikrs (Counters)
-  const defaultDhikrs = [
-    { id: 'dhikr_istighfar', name: 'استغفار', sortOrder: 1, target: 100, createdAt: '2026-06-12', updatedAt: Date.now() },
-    { id: 'dhikr_tasbih', name: 'سبحان الله وبحمده', sortOrder: 2, target: 100, createdAt: '2026-06-12', updatedAt: Date.now() },
-    { id: 'dhikr_salawat', name: 'الصلاة على النبي', sortOrder: 3, target: 100, createdAt: '2026-06-12', updatedAt: Date.now() },
-    { id: 'dhikr_tahlil', name: 'لا إله إلا الله', sortOrder: 4, target: 100, createdAt: '2026-06-12', updatedAt: Date.now() },
-    { id: 'dhikr_hawqala', name: 'لا حول ولا قوة إلا بالله', sortOrder: 5, target: 100, createdAt: '2026-06-12', updatedAt: Date.now() },
-  ];
-
-  for (const dk of defaultDhikrs) {
-    await db.insert(dhikrs).values(dk);
-  }
-
-  // 5. Insert Default Deeds
-  const todayStr = new Date().toISOString().split('T')[0]; // local YYYY-MM-DD
-  const defaultDeeds = [
-    // Morning Section (الصبح)
-    { id: 'deed_fajr', definitionId: 'fajr', sectionId: 'sec_morning', name: 'صلاة الفجر', type: 'boolean', schedule: 'daily', createdAt: todayStr, sortOrder: 1, updatedAt: Date.now() },
-    { id: 'deed_sunnah_fajr', definitionId: 'sunnah_fajr', sectionId: 'sec_morning', name: 'سنة الفجر (ركعتان)', type: 'boolean', schedule: 'daily', createdAt: todayStr, sortOrder: 2, updatedAt: Date.now() },
-    { id: 'deed_adhkar_morning', definitionId: 'adhkar_morning', sectionId: 'sec_morning', name: 'أذكار الصباح', type: 'boolean', schedule: 'daily', createdAt: todayStr, sortOrder: 3, updatedAt: Date.now() },
-
-    // Dhuhr Section (الظهر)
-    { id: 'deed_dhuhr', definitionId: 'dhuhr', sectionId: 'sec_dhuhr', name: 'صلاة الظهر', type: 'boolean', schedule: 'daily', createdAt: todayStr, sortOrder: 1, updatedAt: Date.now() },
-
-    // Asr Section (العصر)
-    { id: 'deed_asr', definitionId: 'asr', sectionId: 'sec_asr', name: 'صلاة العصر', type: 'boolean', schedule: 'daily', createdAt: todayStr, sortOrder: 1, updatedAt: Date.now() },
-
-    // Maghrib Section (المغرب)
-    { id: 'deed_maghrib', definitionId: 'maghrib', sectionId: 'sec_maghrib', name: 'صلاة المغرب', type: 'boolean', schedule: 'daily', createdAt: todayStr, sortOrder: 1, updatedAt: Date.now() },
-
-    // Isha & Night Section (العشاء والليل)
-    { id: 'deed_isha', definitionId: 'isha', sectionId: 'sec_isha_night', name: 'صلاة العشاء', type: 'boolean', schedule: 'daily', createdAt: todayStr, sortOrder: 1, updatedAt: Date.now() },
-    { id: 'deed_adhkar_evening', definitionId: 'adhkar_evening', sectionId: 'sec_isha_night', name: 'أذكار المساء', type: 'boolean', schedule: 'daily', createdAt: todayStr, sortOrder: 2, updatedAt: Date.now() },
-
-    // أعمال على مدار اليوم (Throughout the day)
-    { id: 'deed_istighfar_100', definitionId: 'dhikr_istighfar_lib', sectionId: 'sec_quran', name: 'الاستغفار', type: 'measured', schedule: 'daily', createdAt: todayStr, sortOrder: 1, linkedDhikrId: 'dhikr_istighfar', target: 100, updatedAt: Date.now() },
-    { id: 'deed_hawqala_100', definitionId: 'dhikr_hawqala_lib', sectionId: 'sec_quran', name: 'لا حول ولا قوة إلا بالله', type: 'measured', schedule: 'daily', createdAt: todayStr, sortOrder: 2, linkedDhikrId: 'dhikr_hawqala', target: 100, updatedAt: Date.now() },
-  ];
-
-  for (const deed of defaultDeeds) {
-    await db.insert(deeds).values(deed);
-  }
-
-  // Note: صلاة الجماعة is intentionally NOT seeded as a deed — it is opt-in via the
-  // library (its 5 per-prayer definitions live in DEFAULT_DEED_DEFINITIONS).
+  // 3. Insert the default starter scorecard (sections, dhikrs, deeds).
+  // Note: صلاة الجماعة is intentionally NOT seeded as a deed — it is opt-in via
+  // the library (its 5 per-prayer definitions live in DEFAULT_DEED_DEFINITIONS).
+  await seedDefaultUserData();
 
   console.log('[Seed] Database seeding completed successfully.');
+}
+
+/**
+ * Inserts the default starter scorecard: sections, dhikr counters, and deeds.
+ * Does NOT touch deedDefinitions (the global catalog).
+ *
+ * - Default behaviour (deterministic ids) is used by the initial seed.
+ * - `freshIds: true` generates new ids for every row and remaps references,
+ *   used by factory reset so the new rows don't collide with tombstoned
+ *   default rows that still hold the deterministic ids.
+ */
+export async function seedDefaultUserData(options?: { freshIds?: boolean }): Promise<void> {
+  const today = new Date().toISOString().split('T')[0]; // local YYYY-MM-DD
+  const { sections: secs, dhikrs: dks, deeds: dds } = buildDefaultUserData({
+    now: Date.now(),
+    today,
+    freshIds: options?.freshIds ?? false,
+    genId: () => Crypto.randomUUID(),
+  });
+
+  for (const sec of secs) {
+    await db.insert(sections).values(sec);
+  }
+  for (const dk of dks) {
+    await db.insert(dhikrs).values(dk);
+  }
+  for (const deed of dds) {
+    await db.insert(deeds).values(deed);
+  }
 }
