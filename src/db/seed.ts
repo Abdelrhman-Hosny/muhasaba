@@ -85,6 +85,7 @@ export const DEFAULT_DEED_DEFINITIONS = [
   { id: 'fasting_mon_thu', name: 'صيام الإثنين والخميس', type: 'boolean', defaultSchedule: '1,4', defaultSectionId: 'sec_morning', bundleId: null, linkedDhikrTemplate: null },
 
   // 6.5 عبادات فردية
+  { id: 'duha', name: 'صلاة الضحى', type: 'boolean', defaultSchedule: 'daily', defaultSectionId: 'sec_morning', bundleId: null, linkedDhikrTemplate: null },
   { id: 'qiym_layl', name: 'قيام الليل', type: 'boolean', defaultSchedule: 'daily', defaultSectionId: 'sec_isha_night', bundleId: null, linkedDhikrTemplate: null },
   { id: 'tafsir_tadabbur', name: 'تفسير / تدبر', type: 'boolean', defaultSchedule: 'daily', defaultSectionId: 'sec_quran', bundleId: null, linkedDhikrTemplate: null },
 
@@ -173,8 +174,8 @@ export async function seedDatabase() {
         'dhikr_hawqala_lib'
       ]));
 
-    // 3. Ensure 'qiym_layl' and 'tafsir_tadabbur' definitions exist
-    for (const defId of ['qiym_layl', 'tafsir_tadabbur']) {
+    // 3. Ensure 'qiym_layl', 'tafsir_tadabbur', and 'duha' definitions exist
+    for (const defId of ['qiym_layl', 'tafsir_tadabbur', 'duha']) {
       const existingDef = await db.select().from(deedDefinitions).where(eq(deedDefinitions.id, defId)).limit(1);
       if (existingDef.length === 0) {
         const def = DEFAULT_DEED_DEFINITIONS.find(d => d.id === defId);

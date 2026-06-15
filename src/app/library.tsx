@@ -426,7 +426,10 @@ function createStyles(theme: ThemeType) {
       fontSize: 15,
       color: theme.colors.text,
       fontFamily: theme.font,
-      flexShrink: 1,
+      // Take the row's free width rather than the text's intrinsic width: the
+      // custom font under-measures labels containing a neutral char (e.g. the
+      // "/" in "تفسير / تدبر"), which otherwise clips the trailing word.
+      flex: 1,
     },
     checkbox: {
       width: 24,
