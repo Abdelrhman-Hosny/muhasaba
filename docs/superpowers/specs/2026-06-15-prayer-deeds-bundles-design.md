@@ -96,17 +96,26 @@ A standalone deed (`bundleId = null`) shows no prompt — edit/delete behave as 
 
 ## Seeding
 
-Add an **incremental migration** in `seed.ts` (matching the existing `count > 0` block
-pattern) that introduces the genuinely-per-prayer default deeds as bundles. Candidates
-(authoritative list to be finalised against `examples/عبادة 3.pdf` during implementation):
+صلاة الجماعة is exposed as an **opt-in library bundle**, not auto-seeded deeds. The
+`bundleId`-on-deeds mechanism above remains the path for *user-created* custom deeds
+spanning sections; default per-prayer content like جماعة is instead modelled the same way
+the library already models الصلوات الخمس — as **definition bundles**:
 
-- صلاة الجماعة (all 5 prayer sections)
-- إدراك تكبيرة الإحرام مع الجماعة (all 5)
-- الصف الأول (all 5)
+- Five `deed_definitions` (`jamaah_fajr` … `jamaah_isha`), each `bundleId = 'bundle_jamaah'`
+  with its prayer's `defaultSectionId`, named `جماعة <prayer>`.
+- `library.tsx` maps `bundle_jamaah → 'صلاة الجماعة'` so it renders as a collapsible group
+  with five per-prayer checkboxes plus a master toggle (reusing the library add/remove flow,
+  which is definition-id based).
+- **Default is unchecked (opt-in)** — nothing is added to the scorecard until the user
+  ticks a prayer.
 
-Items that remain once-daily (e.g. الأذكار عقب الصلوات المفروضة) are **not** bundled.
-The migration must be idempotent (guard by checking for an existing member deed id /
-bundle, like the current split-migration logic) so re-runs don't duplicate.
+Incremental migration (`seed.ts`, `count > 0` block): ensure the five `jamaah_*`
+definitions exist, and **delete** the opaque deeds the first implementation auto-seeded
+(`bundleId = 'bundle_jamaah'` AND `definitionId IS NULL`), so existing users converge on
+the same opt-in state. Idempotent by construction.
+
+تكبيرة الإحرام and الصف الأول already exist once-daily under أذكار الصلاة and are left
+as-is.
 
 ## Out of scope (YAGNI)
 

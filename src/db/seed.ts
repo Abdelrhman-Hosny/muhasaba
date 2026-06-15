@@ -1,6 +1,6 @@
 import { db } from './client';
 import { deedDefinitions, sections, deeds, dhikrs } from './schema';
-import { sql, eq, inArray } from 'drizzle-orm';
+import { sql, eq, inArray, and, isNull } from 'drizzle-orm';
 
 export const DEFAULT_DEED_DEFINITIONS = [
   // 1. الصلوات المكتوبة (grouped in bundle_prayers)
@@ -9,6 +9,13 @@ export const DEFAULT_DEED_DEFINITIONS = [
   { id: 'asr', name: 'العصر', type: 'boolean', defaultSchedule: 'daily', defaultSectionId: 'sec_asr', bundleId: 'bundle_prayers', linkedDhikrTemplate: null },
   { id: 'maghrib', name: 'المغرب', type: 'boolean', defaultSchedule: 'daily', defaultSectionId: 'sec_maghrib', bundleId: 'bundle_prayers', linkedDhikrTemplate: null },
   { id: 'isha', name: 'العشاء', type: 'boolean', defaultSchedule: 'daily', defaultSectionId: 'sec_isha_night', bundleId: 'bundle_prayers', linkedDhikrTemplate: null },
+
+  // 1.5 صلاة الجماعة — one definition per prayer (bundle_jamaah), opt-in via the library
+  { id: 'jamaah_fajr', name: 'جماعة الفجر', type: 'boolean', defaultSchedule: 'daily', defaultSectionId: 'sec_morning', bundleId: 'bundle_jamaah', linkedDhikrTemplate: null },
+  { id: 'jamaah_dhuhr', name: 'جماعة الظهر', type: 'boolean', defaultSchedule: 'daily', defaultSectionId: 'sec_dhuhr', bundleId: 'bundle_jamaah', linkedDhikrTemplate: null },
+  { id: 'jamaah_asr', name: 'جماعة العصر', type: 'boolean', defaultSchedule: 'daily', defaultSectionId: 'sec_asr', bundleId: 'bundle_jamaah', linkedDhikrTemplate: null },
+  { id: 'jamaah_maghrib', name: 'جماعة المغرب', type: 'boolean', defaultSchedule: 'daily', defaultSectionId: 'sec_maghrib', bundleId: 'bundle_jamaah', linkedDhikrTemplate: null },
+  { id: 'jamaah_isha', name: 'جماعة العشاء', type: 'boolean', defaultSchedule: 'daily', defaultSectionId: 'sec_isha_night', bundleId: 'bundle_jamaah', linkedDhikrTemplate: null },
 
   // 2. السنن الرواتب
   { id: 'sunnah_fajr', name: 'سنة الفجر (ركعتان)', type: 'boolean', defaultSchedule: 'daily', defaultSectionId: 'sec_morning', bundleId: 'bundle_rawateb', linkedDhikrTemplate: null },
@@ -69,26 +76,6 @@ export const DEFAULT_DEED_DEFINITIONS = [
  * Seeds the database with default definitions, scorecard sections, deeds, and dhikrs
  * if they are not already populated.
  */
-/**
- * صلاة الجماعة tracked per prayer: one deed per prayer section, all sharing a bundle.
- * Returned rows are deterministic so the incremental migration stays idempotent.
- */
-function buildJamaahBundleDeeds(todayStr: string) {
-  const prayerSections = ['sec_morning', 'sec_dhuhr', 'sec_asr', 'sec_maghrib', 'sec_isha_night'];
-  return prayerSections.map((sectionId, i) => ({
-    id: `deed_jamaah_${sectionId}`,
-    definitionId: null,
-    sectionId,
-    bundleId: 'bundle_jamaah',
-    name: 'صلاة الجماعة',
-    type: 'boolean',
-    schedule: 'daily',
-    createdAt: todayStr,
-    sortOrder: 20,
-    updatedAt: Date.now(),
-  }));
-}
-
 export async function seedDatabase() {
   const existingDefs = await db.select({ count: sql`count(*)` }).from(deedDefinitions);
   const count = (existingDefs[0] as any)?.count ?? 0;
@@ -296,18 +283,21 @@ export async function seedDatabase() {
       }
     }
 
-    // 8. Add صلاة الجماعة as a per-prayer bundle (idempotent: guard on the bundle)
-    const existingJamaah = await db
-      .select()
-      .from(deeds)
-      .where(eq(deeds.bundleId, 'bundle_jamaah'))
-      .limit(1);
-    if (existingJamaah.length === 0) {
-      const todayStr = new Date().toISOString().split('T')[0];
-      for (const deed of buildJamaahBundleDeeds(todayStr)) {
-        await db.insert(deeds).values(deed);
+    // 8. صلاة الجماعة is now a library bundle (opt-in), not an auto-seeded deed.
+    // Ensure the 5 per-prayer definitions exist...
+    for (const defId of ['jamaah_fajr', 'jamaah_dhuhr', 'jamaah_asr', 'jamaah_maghrib', 'jamaah_isha']) {
+      const existingDef = await db.select().from(deedDefinitions).where(eq(deedDefinitions.id, defId)).limit(1);
+      if (existingDef.length === 0) {
+        const def = DEFAULT_DEED_DEFINITIONS.find((d) => d.id === defId);
+        if (def) {
+          await db.insert(deedDefinitions).values(def);
+        }
       }
     }
+    // ...and remove the opaque deeds auto-seeded by the previous version (definitionId null).
+    await db
+      .delete(deeds)
+      .where(and(eq(deeds.bundleId, 'bundle_jamaah'), isNull(deeds.definitionId)));
 
     console.log('[Seed] Incremental migrations completed successfully.');
     return;
@@ -387,10 +377,8 @@ export async function seedDatabase() {
     await db.insert(deeds).values(deed);
   }
 
-  // صلاة الجماعة as a per-prayer bundle (one deed per prayer section)
-  for (const deed of buildJamaahBundleDeeds(todayStr)) {
-    await db.insert(deeds).values(deed);
-  }
+  // Note: صلاة الجماعة is intentionally NOT seeded as a deed — it is opt-in via the
+  // library (its 5 per-prayer definitions live in DEFAULT_DEED_DEFINITIONS).
 
   console.log('[Seed] Database seeding completed successfully.');
 }

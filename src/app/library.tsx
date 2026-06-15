@@ -11,6 +11,22 @@ import { db } from '@/db/client';
 import { dhikrs, DhikrRow } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 
+// Explicit display order for library bundles (independent of DB insertion order).
+const BUNDLE_ORDER = [
+  'bundle_prayers',
+  'bundle_jamaah',
+  'bundle_rawateb',
+  'bundle_adhkar_salah',
+  'bundle_friday',
+  'bundle_adhkar_muqayyada',
+  'bundle_adhkar_mutlaqa',
+];
+
+const bundleRank = (bundleId: string) => {
+  const i = BUNDLE_ORDER.indexOf(bundleId);
+  return i === -1 ? BUNDLE_ORDER.length : i;
+};
+
 export default function DeedsLibraryScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -94,6 +110,7 @@ export default function DeedsLibraryScreen() {
   const getBundleName = (bundleId: string) => {
     if (bundleId === 'rawateb' || bundleId === 'bundle_rawateb') return 'سنن الرواتب';
     if (bundleId === 'prayers' || bundleId === 'bundle_prayers') return 'الصلوات الخمس';
+    if (bundleId === 'bundle_jamaah') return 'صلاة الجماعة';
     if (bundleId === 'bundle_adhkar_salah') return 'أذكار الصلاة';
     if (bundleId === 'bundle_friday') return 'وظائف يوم الجمعة';
     if (bundleId === 'bundle_adhkar_muqayyada') return 'الأذكار المقيدة اليومية';
@@ -188,7 +205,9 @@ export default function DeedsLibraryScreen() {
       <ScrollView style={styles.content} contentContainerStyle={{ paddingBottom: 100 }}>
         
         {/* Bundles */}
-        {Array.from(filteredBundles.entries()).map(([bundleId, items]) => {
+        {Array.from(filteredBundles.entries())
+          .sort(([a], [b]) => bundleRank(a) - bundleRank(b))
+          .map(([bundleId, items]) => {
           const isExpanded = expandedBundles.has(bundleId);
           const activeCount = items.filter(i => activeDefinitionIds.has(i.id)).length;
           const isAllActive = activeCount === items.length;

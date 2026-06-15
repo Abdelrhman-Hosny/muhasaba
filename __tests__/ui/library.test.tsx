@@ -99,4 +99,31 @@ describe('DeedsLibraryScreen', () => {
     });
     expect(addDeed).not.toHaveBeenCalled();
   });
+
+  it('shows صلاة الجماعة as a per-prayer library bundle and adds a single prayer', () => {
+    (useScorecardStructure as jest.Mock).mockReturnValue([]);
+    (useDeedDefinitions as jest.Mock).mockReturnValue([
+      { id: 'jamaah_fajr', name: 'جماعة الفجر', type: 'boolean', defaultSchedule: 'daily', defaultSectionId: 'sec_morning', bundleId: 'bundle_jamaah', linkedDhikrTemplate: null },
+      { id: 'jamaah_dhuhr', name: 'جماعة الظهر', type: 'boolean', defaultSchedule: 'daily', defaultSectionId: 'sec_dhuhr', bundleId: 'bundle_jamaah', linkedDhikrTemplate: null },
+    ]);
+
+    const { getByText, getByTestId } = render(<DeedsLibraryScreen />);
+
+    // Bundle renders under its friendly name and is collapsed by default
+    fireEvent.press(getByText('صلاة الجماعة'));
+
+    // Opt a single prayer in
+    fireEvent.press(getByTestId('lib-checkbox-jamaah_fajr'));
+
+    expect(addDeed).toHaveBeenCalledTimes(1);
+    expect(addDeed).toHaveBeenCalledWith(
+      'جماعة الفجر',
+      'sec_morning',
+      'boolean',
+      'daily',
+      null,
+      null,
+      'jamaah_fajr'
+    );
+  });
 });
