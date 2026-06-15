@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { I18nManager, View, Text, ActivityIndicator, AppState, AppStateStatus, StyleSheet } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Stack } from 'expo-router';
 import { useFonts, Cairo_400Regular, Cairo_700Bold } from '@expo-google-fonts/cairo';
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
@@ -61,18 +62,20 @@ export default function RootLayout() {
   const isReady = success && fontsLoaded;
 
   return (
-    <SafeAreaProvider>
-      <StatusBar style={theme.statusBar} />
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      </Stack>
-      {!isReady && (
-        <View style={[StyleSheet.absoluteFill, { backgroundColor: theme.colors.bg }]}>
-          <Centered>
-            <ActivityIndicator color={theme.colors.primary} />
-          </Centered>
-        </View>
-      )}
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <StatusBar style={theme.statusBar} />
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        </Stack>
+        {!isReady && (
+          <View style={[StyleSheet.absoluteFill, { backgroundColor: theme.colors.bg }]}>
+            <Centered>
+              <ActivityIndicator color={theme.colors.primary} />
+            </Centered>
+          </View>
+        )}
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }

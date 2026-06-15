@@ -1,11 +1,17 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, Pressable, StyleSheet, I18nManager } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import {
+  NestedReorderableList,
+  ReorderableListReorderEvent,
+  reorderItems,
+  useReorderableDrag,
+} from 'react-native-reorderable-list';
 import { useTheme, ThemeType, rtlRow } from '@/ui/theme';
 import { ar } from '@/i18n/ar';
 import { toArabicNumeral } from '@/i18n/format';
 import { getScheduleLabel } from '@/domain/schedule';
-import { ScorecardStructureSection } from '@/state/deedStore';
+import { ScorecardStructureSection, reorderDeeds } from '@/state/deedStore';
 import { DeedRow } from '@/db/schema';
 
 interface DeedsSettingsTabProps {
@@ -27,73 +33,155 @@ export function DeedsSettingsTab({
   return (
     <>
       {scorecardStructure.map(({ section, deeds }) => (
-        <View key={section.id} style={styles.sectionBlock}>
-          <Text style={styles.sectionHeader}>{section.name}</Text>
-
-          {deeds.length === 0 ? (
-            <View style={styles.emptyCard}>
-              <Text style={styles.emptyText}>{ar.settings.deeds.noDeeds}</Text>
-            </View>
-          ) : (
-            deeds.map((deed) => {
-              const scheduleLabel = getScheduleLabel(deed.schedule);
-              const typeLabel =
-                deed.type === 'boolean'
-                  ? ar.settings.deeds.typeBoolean
-                  : `${ar.settings.deeds.typeMeasured} (هدف: ${toArabicNumeral(deed.target ?? 0)})`;
-
-              const linkedDhikrName = deed.linkedDhikrId ? dhikrNamesMap.get(deed.linkedDhikrId) : null;
-
-              return (
-                <View key={deed.id} style={styles.deedCard} testID={`deed-card-${deed.id}`}>
-                  <View style={styles.deedInfo}>
-                    <Text style={styles.deedName}>{deed.name}</Text>
-
-                    <View style={styles.metaRow}>
-                      <View style={styles.metaBadge}>
-                        <Text style={styles.metaText}>{scheduleLabel}</Text>
-                      </View>
-                      <View style={styles.metaBadge}>
-                        <Text style={styles.metaText}>{typeLabel}</Text>
-                      </View>
-                    </View>
-
-                    {linkedDhikrName && (
-                      <View style={styles.linkedBadge}>
-                        <Ionicons name="link-outline" size={12} color={theme.colors.primary} />
-                        <Text style={styles.linkedText}>
-                          {`${ar.settings.deeds.linkedDhikr}: ${linkedDhikrName}`}
-                        </Text>
-                      </View>
-                    )}
-                  </View>
-
-                  {/* Card Actions */}
-                  <View style={styles.cardActions}>
-                    <Pressable
-                      testID={`btn-edit-deed-${deed.id}`}
-                      onPress={() => onEditDeed(deed)}
-                      hitSlop={8}
-                      style={styles.actionBtn}
-                    >
-                      <Ionicons name="pencil-outline" size={20} color={theme.colors.muted} />
-                    </Pressable>
-                    <Pressable
-                      testID={`btn-delete-deed-${deed.id}`}
-                      onPress={() => onDeleteDeed(deed)}
-                      hitSlop={8}
-                      style={styles.actionBtn}
-                    >
-                      <Ionicons name="trash-outline" size={20} color={theme.colors.missed} />
-                    </Pressable>
-                  </View>
-                </View>
-              );
-            })
-          )}
-        </View>
+        <DeedSection
+          key={section.id}
+          sectionName={section.name}
+          deeds={deeds}
+          dhikrNamesMap={dhikrNamesMap}
+          onEditDeed={onEditDeed}
+          onDeleteDeed={onDeleteDeed}
+          theme={theme}
+          styles={styles}
+        />
       ))}
     </>
+  );
+}
+
+interface DeedSectionProps {
+  sectionName: string;
+  deeds: DeedRow[];
+  dhikrNamesMap: Map<string, string>;
+  onEditDeed: (deed: DeedRow) => void;
+  onDeleteDeed: (deed: DeedRow) => void;
+  theme: ThemeType;
+  styles: ReturnType<typeof createStyles>;
+}
+
+function DeedSection({
+  sectionName,
+  deeds,
+  dhikrNamesMap,
+  onEditDeed,
+  onDeleteDeed,
+  theme,
+  styles,
+}: DeedSectionProps) {
+  // Local copy so a drag updates the order instantly; the live query reconciles
+  // to the persisted order once reorderDeeds writes to the database.
+  const [items, setItems] = useState(deeds);
+  useEffect(() => {
+    setItems(deeds);
+  }, [deeds]);
+
+  const handleReorder = ({ from, to }: ReorderableListReorderEvent) => {
+    const next = reorderItems(items, from, to);
+    setItems(next);
+    reorderDeeds(next.map((d) => d.id));
+  };
+
+  return (
+    <View style={styles.sectionBlock}>
+      <Text style={styles.sectionHeader}>{sectionName}</Text>
+
+      {items.length === 0 ? (
+        <View style={styles.emptyCard}>
+          <Text style={styles.emptyText}>{ar.settings.deeds.noDeeds}</Text>
+        </View>
+      ) : (
+        <NestedReorderableList
+          data={items}
+          onReorder={handleReorder}
+          keyExtractor={(deed) => deed.id}
+          scrollEnabled={false}
+          renderItem={({ item }) => (
+            <DeedCard
+              deed={item}
+              dhikrNamesMap={dhikrNamesMap}
+              onEditDeed={onEditDeed}
+              onDeleteDeed={onDeleteDeed}
+              theme={theme}
+              styles={styles}
+            />
+          )}
+        />
+      )}
+    </View>
+  );
+}
+
+interface DeedCardProps {
+  deed: DeedRow;
+  dhikrNamesMap: Map<string, string>;
+  onEditDeed: (deed: DeedRow) => void;
+  onDeleteDeed: (deed: DeedRow) => void;
+  theme: ThemeType;
+  styles: ReturnType<typeof createStyles>;
+}
+
+function DeedCard({ deed, dhikrNamesMap, onEditDeed, onDeleteDeed, theme, styles }: DeedCardProps) {
+  const drag = useReorderableDrag();
+
+  const scheduleLabel = getScheduleLabel(deed.schedule);
+  const typeLabel =
+    deed.type === 'boolean'
+      ? ar.settings.deeds.typeBoolean
+      : `${ar.settings.deeds.typeMeasured} (هدف: ${toArabicNumeral(deed.target ?? 0)})`;
+
+  const linkedDhikrName = deed.linkedDhikrId ? dhikrNamesMap.get(deed.linkedDhikrId) : null;
+
+  return (
+    <View style={styles.deedCard} testID={`deed-card-${deed.id}`}>
+      <View style={styles.deedInfo}>
+        <Text style={styles.deedName}>{deed.name}</Text>
+
+        <View style={styles.metaRow}>
+          <View style={styles.metaBadge}>
+            <Text style={styles.metaText}>{scheduleLabel}</Text>
+          </View>
+          <View style={styles.metaBadge}>
+            <Text style={styles.metaText}>{typeLabel}</Text>
+          </View>
+        </View>
+
+        {linkedDhikrName && (
+          <View style={styles.linkedBadge}>
+            <Ionicons name="link-outline" size={12} color={theme.colors.primary} />
+            <Text style={styles.linkedText}>
+              {`${ar.settings.deeds.linkedDhikr}: ${linkedDhikrName}`}
+            </Text>
+          </View>
+        )}
+      </View>
+
+      {/* Card Actions */}
+      <View style={styles.cardActions}>
+        <Pressable
+          testID={`btn-reorder-deed-${deed.id}`}
+          onPressIn={drag}
+          hitSlop={8}
+          style={styles.actionBtn}
+        >
+          <Ionicons name="reorder-three-outline" size={22} color={theme.colors.muted} />
+        </Pressable>
+        <Pressable
+          testID={`btn-edit-deed-${deed.id}`}
+          onPress={() => onEditDeed(deed)}
+          hitSlop={8}
+          style={styles.actionBtn}
+        >
+          <Ionicons name="pencil-outline" size={20} color={theme.colors.muted} />
+        </Pressable>
+        <Pressable
+          testID={`btn-delete-deed-${deed.id}`}
+          onPress={() => onDeleteDeed(deed)}
+          hitSlop={8}
+          style={styles.actionBtn}
+        >
+          <Ionicons name="trash-outline" size={20} color={theme.colors.missed} />
+        </Pressable>
+      </View>
+    </View>
   );
 }
 

@@ -629,6 +629,28 @@ export async function deleteDeedBundle(bundleId: string): Promise<void> {
 }
 
 /**
+ * Persists a new ordering for deeds within a single section. The caller passes the
+ * full list of deed ids in their desired order; each row's sortOrder is rewritten to
+ * its index (0..n-1), marked dirty, and a sync is scheduled. No-op for fewer than 2 ids.
+ */
+export async function reorderDeeds(orderedDeedIds: string[]): Promise<void> {
+  if (orderedDeedIds.length < 2) return;
+
+  const now = Date.now();
+
+  await db.transaction(async (tx) => {
+    for (let i = 0; i < orderedDeedIds.length; i++) {
+      await tx
+        .update(deeds)
+        .set({ sortOrder: i, updatedAt: now, dirty: true })
+        .where(eq(deeds.id, orderedDeedIds[i]));
+    }
+  });
+
+  scheduleSync();
+}
+
+/**
  * Reactive: Returns all active sections in the database.
  */
 export function useSections(): SectionRow[] {

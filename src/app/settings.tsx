@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { View, StyleSheet, Alert, ScrollView, Pressable, Text } from 'react-native';
+import { ScrollViewContainer } from 'react-native-reorderable-list';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, Stack, useLocalSearchParams } from 'expo-router';
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
@@ -297,22 +298,26 @@ export default function SettingsScreen() {
       </View>
 
       {/* Content List */}
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {activeTab === 'deeds' ? (
+      {activeTab === 'deeds' ? (
+        // ScrollViewContainer is the required parent for the NestedReorderableLists
+        // rendered per prayer section inside DeedsSettingsTab.
+        <ScrollViewContainer contentContainerStyle={styles.scrollContent}>
           <DeedsSettingsTab
             scorecardStructure={scorecardStructure}
             dhikrNamesMap={dhikrNamesMap}
             onEditDeed={handleOpenEditDeed}
             onDeleteDeed={handleDeleteDeedConfirm}
           />
-        ) : (
+        </ScrollViewContainer>
+      ) : (
+        <ScrollView contentContainerStyle={styles.scrollContent}>
           <DhikrsSettingsTab
             dhikrsList={dhikrsList}
             onEditDhikr={handleOpenEditDhikr}
             onDeleteDhikr={handleDeleteDhikrConfirm}
           />
-        )}
-      </ScrollView>
+        </ScrollView>
+      )}
 
       {/* Floating Save/Add Action Bar */}
       <View style={[styles.bottomBar, { paddingBottom: insets.bottom + 12 }]}>
